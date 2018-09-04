@@ -1,17 +1,17 @@
 ﻿// Name "JS Smooth Browser"
 // Version "20151114-1630-340"
 // Author "Br3tt aka Falstaff >> http://br3tt.deviantart.com"
-// mod for foobox http://dreamawake.blog.163.com/
+// mod for foobox http://blog.sina.com.cn/dream7180
 var fbx_set = [];
 window.NotifyOthers("get_fbx_set", fbx_set);
 var zdpi = fbx_set[9];
 var random_mode = fbx_set[12];
 var ui_mode = fbx_set[11];
 var album_front_disc = fbx_set[21];
-if(fbx_set[22] == "") fbx_set[22] = fb.ProfilePath + "MusicArt\\Album";
-var album_cover_dir = repath(fbx_set[22]);
-if(fbx_set[23] == "") fbx_set[23] = fb.ProfilePath + "MusicArt\\Artist";
-var artist_cover_dir = repath(fbx_set[23]);
+var album_cover_dir = fbx_set[22];
+album_cover_dir = (album_cover_dir == "%path%") ? "$directory_path(%path%)" : repath(album_cover_dir);
+var artist_cover_dir = fbx_set[23];
+artist_cover_dir = (artist_cover_dir == "%path%") ? "$directory_path(%path%)" : repath(artist_cover_dir);
 var genre_cover_dir = repath(fbx_set[24]);
 var dir_cover_name = fbx_set[25];
 var show_shadow = fbx_set[28];
@@ -73,17 +73,16 @@ ppt = {
 	scrollRowDivider: window.GetProperty("SYSTEM Scroll Row Divider", 1),
 	tf_groupkey_genre: fb.TitleFormat("$if2(%genre%,未知流派)"),
 	tf_groupkey_dir: fb.TitleFormat("$directory_path(%path%)"),
-	//tf_groupkey_dir: fb.TitleFormat("$replace(%path%,%filename_ext%,)"),
 	tf_groupkey_albumartist: fb.TitleFormat("$if2(%album artist%,未知艺术家)"),
 	tf_groupkey_artist: fb.TitleFormat("$if2(%artist%,未知艺术家)"),
 	tf_groupkey_album: fb.TitleFormat("%album artist% ^^ %album% ## %title%"),
 	tf_groupkey_album_lt: fb.TitleFormat("$if2(%album%,单曲)"),
 	tf_path: fb.TitleFormat(album_cover_dir+"\\"),
-	tf_path_raw: fb.TitleFormat("$left(%_path_raw%,4)"),
 	tf_path_artist: fb.TitleFormat(artist_cover_dir+"\\"),
-	tf_path_genre: fb.TitleFormat(genre_cover_dir+"\\"),
+	tf_path_genre: genre_cover_dir + "\\",//fb.TitleFormat(genre_cover_dir+"\\"),
 	tf_path_dir: fb.TitleFormat("$directory_path(%path%)\\"),
-	tf_crc: fb.TitleFormat("$crc32('albums'%album%)"),
+	tf_crc: fb.TitleFormat("$crc32('aa'%album artist%-%album%)"),
+	//tf_crc: fb.TitleFormat("$crc32('albums'%album%)"),
 	tf_crc_dir: fb.TitleFormat("$crc32('directories'$directory(%path%,1))"),
 	tf_crc_albumartist: fb.TitleFormat("$crc32('artists'%album artist%)"),
 	tf_crc_artist: fb.TitleFormat("$crc32('artists'%artist%)"),
@@ -99,13 +98,10 @@ ppt = {
 	defaultHeaderBarHeight: 28,
 	headerBarHeight: 28,
 	enableTouchControl: window.GetProperty("_PROPERTY: Enable Scroll Touch Control", true),
-	//default_botStampHeight: 48,
 	botStampHeight: 48*zdpi,
 	default_botGridHeight: 30,
 	botGridHeight: 0,
-	//default_botTextRowHeight: 17,
 	botTextRowHeight: 17*zdpi,
-	//default_textLineHeight: 10,
 	textLineHeight: 10*zdpi
 	//rawBitmap: false
 };
@@ -123,10 +119,6 @@ cTouch = {
 	multiplier: 0,
 	delta: 0
 };
-
-//cSettings = {
-//	visible: false
-//};
 
 cFilterBox = {
 	enabled: window.GetProperty("_PROPERTY: Enable Filter Box", true),
@@ -232,7 +224,7 @@ function on_load_image_done(tid, image) {
 		if (brw.groups[k].metadb) {
 			if (brw.groups[k].tid == tid && brw.groups[k].load_requested == 1) {
 				brw.groups[k].load_requested = 2;
-				brw.groups[k].cover_img = g_image_cache.getit(brw.groups[k].metadb, k, image);
+				brw.groups[k].cover_img = g_image_cache.getit(brw.groups[k].metadb, k, image, false);
 				//if(!isScrolling && !cScrollBar.timerID) {
 				if (k < brw.groups.length && k >= g_start_ && k <= g_end_) {
 					if (!timers.coverDone) {
@@ -268,7 +260,10 @@ function on_get_album_art_done(metadb, art_id, image, image_path) {
 		try {
 			if (brw.groups[i].metadb) {
 				if (brw.groups[i].metadb.Compare(metadb)) {
-					brw.groups[i].cover_img = g_image_cache.getit(metadb, i, image);
+					if(path_img(image_path))
+						brw.groups[i].cover_img = g_image_cache.getit(metadb, i, image, image_path);
+					else
+						brw.groups[i].cover_img = g_image_cache.getit(metadb, i, image, false);
 					//if(!isScrolling && !cScrollBar.timerID) {
 					if (i < brw.groups.length && i >= g_start_ && i <= g_end_) {
 						if (!timers.coverDone) {
@@ -348,7 +343,7 @@ image_cache = function() {
 										var genre_img = gdi.Image(_path + ".jpg") || gdi.Image(_path + ".png");
 									}
 									else{
-										var _path = ppt.tf_path_genre.EvalWithMetadb(metadb) +  GetGenre(arr[0]);
+										var _path = ppt.tf_path_genre/*.EvalWithMetadb(metadb)*/ +  GetGenre(arr[0]);
 										var genre_img = gdi.Image(_path + ".jpg") || gdi.Image(_path + ".png");
 									}
 								} catch (e) {
@@ -356,7 +351,7 @@ image_cache = function() {
 									//	var genre_img = gdi.Image(images.path + "genres\\" + "Other.jpg");
 								};
 								try {
-									brw.groups[albumIndex].cover_img = g_image_cache.getit(metadb, albumIndex, genre_img);
+									brw.groups[albumIndex].cover_img = g_image_cache.getit(metadb, albumIndex, genre_img, true);
 									brw.repaint();
 								}
 								catch(e) {}
@@ -388,7 +383,7 @@ image_cache = function() {
 	this.reset = function(key) {
 		this._cachelist[key] = null;
 	};
-	this.getit = function(metadb, albumId, image) {
+	this.getit = function(metadb, albumId, image, image_path) {
 		var cw = cover.max_w;
 		var ch = cw;
 		var img = null;
@@ -433,11 +428,11 @@ image_cache = function() {
 			this._cachelist[brw.groups[albumId].cachekey] = img;
 
 			// save img to cache
-			if (ppt.enableDiskCache) {
+			if (ppt.enableDiskCache && image_path) {
 				if (cover_type == 1 && !brw.groups[albumId].save_requested) {
 					if (!timers.saveCover) {
 						brw.groups[albumId].save_requested = true;
-						save_image_to_cache(metadb, albumId);
+						save_image_to_cache(metadb, albumId, image_path);
 						timers.saveCover = window.SetTimeout(function() {
 							window.ClearTimeout(timers.saveCover);
 							timers.saveCover = false;
@@ -894,6 +889,8 @@ oGroup = function(index, start, handle, groupkey) {
 	if (handle) {
 		switch (ppt.tagMode) {
 		case 1:
+			//if (ppt.albumMode == 0) this.cachekey = process_cachekey(ppt.tf_crc_aa.EvalWithMetadb(handle));
+			//else this.cachekey = process_cachekey(ppt.tf_crc.EvalWithMetadb(handle));
 			this.cachekey = process_cachekey(ppt.tf_crc.EvalWithMetadb(handle));
 			break;
 		case 2:
@@ -914,6 +911,7 @@ oGroup = function(index, start, handle, groupkey) {
 		this.cachekey = null;
 		this.tracktype = 0;
 	};
+	//this.cachekey = this.cachekey + ".jpg";
 	//
 	this.cover_img = null;
 	this.cover_type = null;
@@ -2177,7 +2175,6 @@ oBrowser = function(name) {
 		var _menu = window.CreatePopupMenu();
 		var Context = fb.CreateContextMenuManager();
 		var _child01 = window.CreatePopupMenu();
-		var _child02 = window.CreatePopupMenu();
 		var _allitem = (ppt.showAllItem && albumIndex == 0);
 
 		var crc = this.groups[albumIndex].cachekey;
@@ -2187,24 +2184,21 @@ oBrowser = function(name) {
 
 		_menu.AppendMenuItem(MF_STRING, 1, "设置...");
 		_menu.AppendMenuSeparator();
-		_menu.AppendMenuItem(MF_STRING, 899, "创建自动播放列表");
+		_menu.AppendMenuItem(MF_STRING, 899, "创建智能列表");
 		if(ppt.tagMode < 3 && !_allitem) _menu.AppendMenuItem(MF_STRING, 898, "下载封面图片 (强制)");
 		_menu.AppendMenuSeparator();
 		Context.BuildMenu(_menu, 2, -1);
-
-		_child01.AppendTo(_menu, MF_STRING, "选择...");
-
-		_child01.AppendMenuItem(MF_STRING, 1010, "重置图像缓存");
-		_child02.AppendTo(_child01, MF_STRING, "发送到...");
-		_child02.AppendMenuItem(MF_STRING, 2000, "新播放列表");
+		_menu.AppendMenuItem(MF_STRING, 1010, "重置所选图像的缓存");
+		_child01.AppendTo(_menu, MF_STRING, "选择发送到...");
+		_child01.AppendMenuItem(MF_STRING, 2000, "新播放列表");
 
 		var pl_count = plman.PlaylistCount;
 		if (pl_count > 1) {
-			_child02.AppendMenuItem(MF_SEPARATOR, 0, "");
+			_child01.AppendMenuItem(MF_SEPARATOR, 0, "");
 		};
 		for (var i = 0; i < pl_count; i++) {
 			if (i != this.playlist && !plman.IsAutoPlaylist(i)) {
-				_child02.AppendMenuItem(MF_STRING, 2001 + i, plman.GetPlaylistName(i));
+				_child01.AppendMenuItem(MF_STRING, 2001 + i, plman.GetPlaylistName(i));
 			};
 		};
 
@@ -2270,7 +2264,6 @@ oBrowser = function(name) {
 			};
 		};
 		_child01.Dispose();
-		_child02.Dispose();
 		_menu.Dispose();
 		g_rbtn_click = false;
 		return true;
@@ -2707,6 +2700,7 @@ function on_paint(gr) {
 };
 
 function SingleDownload(obj){
+	var savepath;
 	if(obj.type == 1){
 		if(ppt.albumMode == 0){
 			var down_alb = brw.groups[obj.groupIndex].groupkey.split(" ^^ ")[1];
@@ -2721,13 +2715,29 @@ function SingleDownload(obj){
 		var til = fb.TitleFormat("%title%").EvalWithMetadb(brw.groups[obj.groupIndex].metadb).replace(/(\\|:|\*|\?|"|<|>|\/|\|)/g, "");
 		var art = down_art.replace(/(\\|:|\*|\?|"|<|>|\/|\|)/g, "");
 		var filename = (art? art + " - ": "") + alb + ".jpg";
-		search_album(obj.idx, til, art, alb, album_cover_dir, filename);
+		if(album_cover_dir == "$directory_path(%path%)"){
+			if(brw.groups[obj.groupIndex].tracktype > 0) {
+				savepath = fb.ProfilePath + "MusicArt\\Album";
+				if (!fso.FolderExists(fb.ProfilePath + "MusicArt")) fso.CreateFolder(fb.ProfilePath + "MusicArt");
+				if (!fso.FolderExists(fb.ProfilePath + "MusicArt\\Album")) fso.CreateFolder(fb.ProfilePath + "MusicArt\\Album");
+			}
+			else savepath = fb.TitleFormat(album_cover_dir).EvalWithMetadb(brw.groups[obj.groupIndex].metadb);
+		} else savepath =  album_cover_dir;
+		search_album(obj.idx, til, art, alb, savepath, filename);
 	} else{
 		var down_art = brw.groups[obj.groupIndex].groupkey;
 		var art = down_art.replace(/(\\|:|\*|\?|"|<|>|\/|\|)/g, "");
 		obj.infoKey = down_art;
 		var filename = art + ".jpg";
-		search_artist(obj.idx, art, artist_cover_dir, filename);
+		if(artist_cover_dir == "$directory_path(%path%)"){
+			if(brw.groups[obj.groupIndex].tracktype > 0) {
+				savepath = fb.ProfilePath + "MusicArt\\Artist";
+				if (!fso.FolderExists(fb.ProfilePath + "MusicArt")) fso.CreateFolder(fb.ProfilePath + "MusicArt");
+				if (!fso.FolderExists(fb.ProfilePath + "MusicArt\\Artist")) fso.CreateFolder(fb.ProfilePath + "MusicArt\\Artist");
+			}
+			else savepath = fb.TitleFormat(artist_cover_dir).EvalWithMetadb(brw.groups[obj.groupIndex].metadb);
+		} else savepath =  artist_cover_dir;
+		search_artist(obj.idx, art, savepath, filename);
 	}
 }
 
@@ -3347,22 +3357,19 @@ function on_script_unload() {
 //=================================================// Keyboard Callbacks
 
 function on_key_up(vkey) {
-	//if (cSettings.visible) {};
-	//else {
-		// inputBox
-		if (ppt.showHeaderBar && cFilterBox.enabled && g_filterbox.inputbox.visible) {
-			g_filterbox.on_key("up", vkey);
-		};
+	// inputBox
+	if (ppt.showHeaderBar && cFilterBox.enabled && g_filterbox.inputbox.visible) {
+		g_filterbox.on_key("up", vkey);
+	};
 
-		// scroll keys up and down RESET (step and timers)
-		brw.keypressed = false;
-		cScrollBar.timerCounter = -1;
-		cScrollBar.timerID && window.ClearTimeout(cScrollBar.timerID);
-		cScrollBar.timerID = false;
-		//if (vkey == VK_SHIFT) {
-		//	brw.SHIFT_start_id = null;
-		//	brw.SHIFT_count = 0;
-		//};
+	// scroll keys up and down RESET (step and timers)
+	brw.keypressed = false;
+	cScrollBar.timerCounter = -1;
+	cScrollBar.timerID && window.ClearTimeout(cScrollBar.timerID);
+	cScrollBar.timerID = false;
+	//if (vkey == VK_SHIFT) {
+	//	brw.SHIFT_start_id = null;
+	//	brw.SHIFT_count = 0;
 	//};
 	brw.repaint();
 };
@@ -3370,35 +3377,195 @@ function on_key_up(vkey) {
 
 function on_key_down(vkey) {
 	var mask = GetKeyboardMask();
-	//if (cSettings.visible) {};
-	//else {
-		//if(dragndrop.drag_in) return true;
+	//if(dragndrop.drag_in) return true;
+	// inputBox
+	if (ppt.showHeaderBar && cFilterBox.enabled && g_filterbox.inputbox.visible) {
+		g_filterbox.on_key("down", vkey);
+	};
 
-		// inputBox
-		if (ppt.showHeaderBar && cFilterBox.enabled && g_filterbox.inputbox.visible) {
-			g_filterbox.on_key("down", vkey);
-		};
+	var act_pls = g_active_playlist;
 
-		var act_pls = g_active_playlist;
-
-		if (mask == KMask.none) {
-			switch (vkey) {
-			case VK_F2:
-				brw.showNowPlaying();
-				break;
-			case VK_F5:
-				refresh_cover();
-				break;
-			case VK_TAB:
-				break;
-			case VK_BACK:
-				if (cList.search_string.length > 0) {
+	if (mask == KMask.none) {
+		switch (vkey) {
+		case VK_F2:
+			brw.showNowPlaying();
+			break;
+		case VK_F5:
+			refresh_cover();
+			break;
+		case VK_TAB:
+			break;
+		case VK_BACK:
+			if (cList.search_string.length > 0) {
+				cList.inc_search_noresult = false;
+				brw.tt_x = ((brw.w) / 2) - (((cList.search_string.length * 13) + (10 * 2)) / 2);
+				brw.tt_y = brw.y + Math.floor((brw.h / 2) - 30);
+				brw.tt_w = ((cList.search_string.length * 13) + (10 * 2));
+				brw.tt_h = 60;
+				cList.search_string = cList.search_string.substring(0, cList.search_string.length - 1);
+				brw.repaint();
+				cList.clear_incsearch_timer && window.ClearTimeout(cList.clear_incsearch_timer);
+				cList.clear_incsearch_timer = false;
+				cList.incsearch_timer && window.ClearTimeout(cList.incsearch_timer);
+				cList.incsearch_timer = window.SetTimeout(function() {
+					brw.incrementalSearch();
+					window.ClearTimeout(cList.incsearch_timer);
+					cList.incsearch_timer = false;
 					cList.inc_search_noresult = false;
-					brw.tt_x = ((brw.w) / 2) - (((cList.search_string.length * 13) + (10 * 2)) / 2);
-					brw.tt_y = brw.y + Math.floor((brw.h / 2) - 30);
-					brw.tt_w = ((cList.search_string.length * 13) + (10 * 2));
-					brw.tt_h = 60;
-					cList.search_string = cList.search_string.substring(0, cList.search_string.length - 1);
+				}, 500);
+			};
+			break;
+		case VK_ESCAPE:
+		case 222:
+			brw.tt_x = ((brw.w) / 2) - (((cList.search_string.length * 13) + (10 * 2)) / 2);
+			brw.tt_y = brw.y + Math.floor((brw.h / 2) - 30);
+			brw.tt_w = ((cList.search_string.length * 13) + (10 * 2));
+			brw.tt_h = 60;
+			cList.search_string = "";
+			window.RepaintRect(0, brw.tt_y - 2, brw.w, brw.tt_h + 4);
+			break;
+		case VK_UP:
+			if (brw.rowsCount > 0 && !brw.keypressed && !cScrollBar.timerID) {
+				brw.keypressed = true;
+				reset_cover_timers();
+			};
+			break;
+		case VK_DOWN:
+			if (brw.rowsCount > 0 && !brw.keypressed && !cScrollBar.timerID) {
+				brw.keypressed = true;
+				reset_cover_timers();
+			};
+			break;
+		case VK_PGUP:
+			if (brw.rowsCount > 0 && !brw.keypressed && !cScrollBar.timerID) {
+				brw.keypressed = true;
+				reset_cover_timers();
+			};
+			break;
+		case VK_PGDN:
+			if (brw.rowsCount > 0 && !brw.keypressed && !cScrollBar.timerID) {
+				brw.keypressed = true;
+				reset_cover_timers();
+			};
+			break;
+		case VK_RETURN:
+			// play/enqueue focused item
+			break;
+		case VK_END:
+			if (brw.rowsCount > 0) {
+			};
+			break;
+		case VK_HOME:
+			if (brw.rowsCount > 0) {
+
+			};
+			break;
+		case VK_DELETE:
+			if (!plman.IsAutoPlaylist(act_pls)) {
+
+			};
+			break;
+		};
+	};
+	else {
+		switch (mask) {
+		case KMask.shift:
+			switch (vkey) {
+			case VK_SHIFT:
+				// SHIFT key alone
+
+				break;
+			case VK_UP:
+				// SHIFT + KEY UP
+
+				break;
+			case VK_DOWN:
+				// SHIFT + KEY DOWN
+
+				break;
+			};
+			break;
+		case KMask.ctrl:
+			if (vkey == 65) { // CTRL+A
+
+			};
+			if (vkey == 66) { // CTRL+B
+				cScrollBar.enabled = !cScrollBar.enabled;
+				window.SetProperty("_DISPLAY: Show Scrollbar", cScrollBar.enabled);
+				get_metrics();
+				brw.repaint();
+			};
+			if (vkey == 88) { // CTRL+X
+				if (!plman.IsAutoPlaylist(act_pls)) {
+
+				};
+			};
+			if (vkey == 67) { // CTRL+C
+
+			};
+			if (vkey == 86) { // CTRL+V
+
+			};
+			if (vkey == 70) { // CTRL+F
+				fb.RunMainMenuCommand("Edit/Search");
+			};
+			if (vkey == 73) { // CTRL+I
+
+			};
+			if (vkey == 78) { // CTRL+N
+				fb.RunMainMenuCommand("File/New playlist");
+			};
+			if (vkey == 79) { // CTRL+O
+				fb.RunMainMenuCommand("File/Open...");
+			};
+			if (vkey == 80) { // CTRL+P
+				fb.RunMainMenuCommand("File/Preferences");
+			};
+			if (vkey == 83) { // CTRL+S
+				fb.RunMainMenuCommand("File/Save playlist...");
+			};
+			if (vkey == 84) { // CTRL+T
+				ppt.showHeaderBar = !ppt.showHeaderBar;
+				window.SetProperty("_DISPLAY: Show Top Bar", ppt.showHeaderBar);
+				get_metrics();
+				brw.scrollbar.updateScrollbar();
+				brw.repaint();
+			};
+			break;
+		case KMask.alt:
+			switch (vkey) {
+			case 65:
+				// ALT+A
+				fb.RunMainMenuCommand("View/Always on Top");
+				break;
+			case VK_ALT:
+				// ALT key alone
+				break;
+			};
+			break;
+		};
+	};
+};
+
+function on_char(code) {
+	// inputBox
+	if (ppt.showHeaderBar && cFilterBox.enabled && g_filterbox.inputbox.visible) {
+		g_filterbox.on_char(code);
+	};
+
+	if (g_filterbox.inputbox.edit) {
+		//g_filterbox.on_char(code);
+	};
+	else {
+		if (brw.list.Count > 0) {
+			brw.tt_x = ((brw.w) / 2) - (((cList.search_string.length * 13) + (10 * 2)) / 2);
+			brw.tt_y = brw.y + Math.floor((brw.h / 2) - 30);
+			brw.tt_w = ((cList.search_string.length * 13) + (10 * 2));
+			brw.tt_h = 60;
+			if (code == 32 && cList.search_string.length == 0) return true; // SPACE Char not allowed on 1st char
+			if (cList.search_string.length <= 20 && brw.tt_w <= brw.w - 20) {
+				if (code > 31) {
+					cList.search_string = cList.search_string + String.fromCharCode(code);//.toUpperCase();
 					brw.repaint();
 					cList.clear_incsearch_timer && window.ClearTimeout(cList.clear_incsearch_timer);
 					cList.clear_incsearch_timer = false;
@@ -3407,181 +3574,11 @@ function on_key_down(vkey) {
 						brw.incrementalSearch();
 						window.ClearTimeout(cList.incsearch_timer);
 						cList.incsearch_timer = false;
-						cList.inc_search_noresult = false;
 					}, 500);
 				};
-				break;
-			case VK_ESCAPE:
-			case 222:
-				brw.tt_x = ((brw.w) / 2) - (((cList.search_string.length * 13) + (10 * 2)) / 2);
-				brw.tt_y = brw.y + Math.floor((brw.h / 2) - 30);
-				brw.tt_w = ((cList.search_string.length * 13) + (10 * 2));
-				brw.tt_h = 60;
-				cList.search_string = "";
-				window.RepaintRect(0, brw.tt_y - 2, brw.w, brw.tt_h + 4);
-				break;
-			case VK_UP:
-				if (brw.rowsCount > 0 && !brw.keypressed && !cScrollBar.timerID) {
-					brw.keypressed = true;
-					reset_cover_timers();
-				};
-				break;
-			case VK_DOWN:
-				if (brw.rowsCount > 0 && !brw.keypressed && !cScrollBar.timerID) {
-					brw.keypressed = true;
-					reset_cover_timers();
-				};
-				break;
-			case VK_PGUP:
-				if (brw.rowsCount > 0 && !brw.keypressed && !cScrollBar.timerID) {
-					brw.keypressed = true;
-					reset_cover_timers();
-				};
-				break;
-			case VK_PGDN:
-				if (brw.rowsCount > 0 && !brw.keypressed && !cScrollBar.timerID) {
-					brw.keypressed = true;
-					reset_cover_timers();
-				};
-				break;
-			case VK_RETURN:
-				// play/enqueue focused item
-				break;
-			case VK_END:
-				if (brw.rowsCount > 0) {
-
-				};
-				break;
-			case VK_HOME:
-				if (brw.rowsCount > 0) {
-
-				};
-				break;
-			case VK_DELETE:
-				if (!plman.IsAutoPlaylist(act_pls)) {
-
-				};
-				break;
 			};
 		};
-		else {
-			switch (mask) {
-			case KMask.shift:
-				switch (vkey) {
-				case VK_SHIFT:
-					// SHIFT key alone
-
-					break;
-				case VK_UP:
-					// SHIFT + KEY UP
-
-					break;
-				case VK_DOWN:
-					// SHIFT + KEY DOWN
-
-					break;
-				};
-				break;
-			case KMask.ctrl:
-				if (vkey == 65) { // CTRL+A
-
-				};
-				if (vkey == 66) { // CTRL+B
-					cScrollBar.enabled = !cScrollBar.enabled;
-					window.SetProperty("_DISPLAY: Show Scrollbar", cScrollBar.enabled);
-					get_metrics();
-					brw.repaint();
-				};
-				if (vkey == 88) { // CTRL+X
-					if (!plman.IsAutoPlaylist(act_pls)) {
-
-					};
-				};
-				if (vkey == 67) { // CTRL+C
-
-				};
-				if (vkey == 86) { // CTRL+V
-
-				};
-				if (vkey == 70) { // CTRL+F
-					fb.RunMainMenuCommand("Edit/Search");
-				};
-				if (vkey == 73) { // CTRL+I
-
-				};
-				if (vkey == 78) { // CTRL+N
-					fb.RunMainMenuCommand("File/New playlist");
-				};
-				if (vkey == 79) { // CTRL+O
-					fb.RunMainMenuCommand("File/Open...");
-				};
-				if (vkey == 80) { // CTRL+P
-					fb.RunMainMenuCommand("File/Preferences");
-				};
-				if (vkey == 83) { // CTRL+S
-					fb.RunMainMenuCommand("File/Save playlist...");
-				};
-				if (vkey == 84) { // CTRL+T
-					ppt.showHeaderBar = !ppt.showHeaderBar;
-					window.SetProperty("_DISPLAY: Show Top Bar", ppt.showHeaderBar);
-					get_metrics();
-					brw.scrollbar.updateScrollbar();
-					brw.repaint();
-				};
-				break;
-			case KMask.alt:
-				switch (vkey) {
-				case 65:
-					// ALT+A
-					fb.RunMainMenuCommand("View/Always on Top");
-					break;
-				case VK_ALT:
-					// ALT key alone
-					break;
-				};
-				break;
-			};
-		};
-
-	//};
-};
-
-function on_char(code) {
-
-	// inputBox
-	if (ppt.showHeaderBar && cFilterBox.enabled && g_filterbox.inputbox.visible) {
-		g_filterbox.on_char(code);
 	};
-
-	//if (cSettings.visible) {};
-	//else {
-		if (g_filterbox.inputbox.edit) {
-			//g_filterbox.on_char(code);
-		};
-		else {
-			if (brw.list.Count > 0) {
-				brw.tt_x = ((brw.w) / 2) - (((cList.search_string.length * 13) + (10 * 2)) / 2);
-				brw.tt_y = brw.y + Math.floor((brw.h / 2) - 30);
-				brw.tt_w = ((cList.search_string.length * 13) + (10 * 2));
-				brw.tt_h = 60;
-				if (code == 32 && cList.search_string.length == 0) return true; // SPACE Char not allowed on 1st char
-				if (cList.search_string.length <= 20 && brw.tt_w <= brw.w - 20) {
-					if (code > 31) {
-						cList.search_string = cList.search_string + String.fromCharCode(code);//.toUpperCase();
-						brw.repaint();
-						cList.clear_incsearch_timer && window.ClearTimeout(cList.clear_incsearch_timer);
-						cList.clear_incsearch_timer = false;
-						cList.incsearch_timer && window.ClearTimeout(cList.incsearch_timer);
-						cList.incsearch_timer = window.SetTimeout(function() {
-							brw.incrementalSearch();
-							window.ClearTimeout(cList.incsearch_timer);
-							cList.incsearch_timer = false;
-						}, 500);
-					};
-				};
-			};
-		};
-	//};
 };
 
 //=================================================// Playback Callbacks
@@ -3644,9 +3641,7 @@ function on_library_items_changed() {
 //=================================================// Playlist Callbacks
 
 function on_playlists_changed() {
-
 	//g_avoid_on_playlist_switch = true;
-
 	if (plman.ActivePlaylist < 0 || plman.ActivePlaylist > plman.PlaylistCount - 1) {
 		plman.ActivePlaylist = 0;
 	};
@@ -3662,7 +3657,6 @@ function on_playlists_changed() {
 			window.SetProperty("_PROPERTY: Lock to Library playlist", ppt.locklibpl);
 		}
 	}
-
 	// refresh playlists list
 	pman.populate(exclude_active = false, reset_scroll = false);
 };
@@ -3837,12 +3831,6 @@ function g_sendResponse() {
 
 function on_notify_data(name, info) {
 	switch (name) {
-	//case "JSSmoothPlaylist->JSSmoothBrowser:avoid_on_playlist_switch_callbacks_on_sendItemToPlaylist":
-	//	g_avoid_on_playlist_switch_callbacks_on_sendItemToPlaylist = true;
-	//	break;
-	//case "JSSmoothPlaylist->JSSmoothBrowser:show_item":
-	//	brw.showItemFromItemHandle(info);
-	//	break;
 	case "set_font":
 		fbx_set[13] = info[0];
 		fbx_set[14] = info[1];
@@ -3957,22 +3945,38 @@ function on_notify_data(name, info) {
 				group_idx = -1;
 				dlmode -= ppt.tagMode;
 			}
-		}
-		if(group_idx == -1){
-			var til = info[2], art = info[3], alb = info[4];
+		} else {
+		//if(group_idx == -1){
+			var til = info[2], art = info[3], alb = info[4], savepath;
 			if(dlmode != 2){
 				var index = DLItems.length;
 				DLItems.push(new oDLItem(index, 1, group_idx));
 				DLItems[index].infoKey = art + " ^^ " + alb;
 				var filename = (art? art + " - ": "") + alb + ".jpg";
-				search_album(index, til, art, alb, album_cover_dir, filename);
+				if(album_cover_dir == "$directory_path(%path%)"){
+					if(TrackType(DL_metadb.rawpath.substring(0, 4)) > 0) {
+						savepath = fb.ProfilePath + "MusicArt\\Album";
+						if (!fso.FolderExists(fb.ProfilePath + "MusicArt")) fso.CreateFolder(fb.ProfilePath + "MusicArt");
+						if (!fso.FolderExists(fb.ProfilePath + "MusicArt\\Album")) fso.CreateFolder(fb.ProfilePath + "MusicArt\\Album");
+					}
+					else savepath = fb.TitleFormat(album_cover_dir).EvalWithMetadb(DL_metadb);
+				} else savepath =  album_cover_dir;
+				search_album(index, til, art, alb, savepath, filename);
 			}
 			if(dlmode != 1){
 				var index = DLItems.length;
 				DLItems.push(new oDLItem(index, 2, group_idx));
 				DLItems[index].infoKey = art;
 				var filename = art + ".jpg";
-				search_artist(index, art, artist_cover_dir, filename);
+				if(artist_cover_dir == "$directory_path(%path%)"){
+					if(TrackType(DL_metadb.rawpath.substring(0, 4)) > 0) {
+						savepath = fb.ProfilePath + "MusicArt\\Artist";
+						if (!fso.FolderExists(fb.ProfilePath + "MusicArt")) fso.CreateFolder(fb.ProfilePath + "MusicArt");
+						if (!fso.FolderExists(fb.ProfilePath + "MusicArt\\Artist")) fso.CreateFolder(fb.ProfilePath + "MusicArt\\Artist");
+					}
+					else savepath = fb.TitleFormat(artist_cover_dir).EvalWithMetadb(DL_metadb);
+				} else savepath =  artist_cover_dir;
+				search_artist(index, art, savepath, filename);
 			}
 		}
 		break;
@@ -3980,7 +3984,7 @@ function on_notify_data(name, info) {
 };
 
 // ======================================================================================================================= //
-
+/*
 function getpath(path) {
 	var img_path = "";
 	var path_, temp, subFlds, tmp;
@@ -4001,7 +4005,7 @@ function getpath(path) {
 	};
 	return null;
 };
-
+*/
 function getpath_(temp, temp2) {
 	var img_path = "",
 		path_;
@@ -4010,7 +4014,8 @@ function getpath_(temp, temp2) {
 		for (var j in path_) {
 			var _path_tmp = path_[j].toLowerCase();
 			if(path_[j].indexOf(temp2) > -1){
-				if (_path_tmp.indexOf(".jpg") > -1 || _path_tmp.indexOf(".png") > -1) {
+				//if (_path_tmp.indexOf(".jpg") > -1 || _path_tmp.indexOf(".png") > -1) {
+				if(path_img(_path_tmp)) {
 					return path_[j];
 				};
 			}
@@ -4018,6 +4023,12 @@ function getpath_(temp, temp2) {
 	};
 	return null;
 };
+
+function path_img(path) {
+	var file_ext =path.substring(path.length - 4);
+	if(file_ext == ".jpg" || file_ext == ".png") return true;
+	else return false;
+}
 
 function check_cache(metadb, albumIndex) {
 	//var crc = ppt.tf_crc.EvalWithMetadb(metadb);
@@ -4038,22 +4049,12 @@ function load_image_from_cache(metadb, crc) {
 	};
 };
 
-function save_image_to_cache(metadb, albumIndex) {
+function save_image_to_cache(metadb, albumIndex, image_path) {
 	var tran = false;
 	switch (ppt.tagMode) {
 	case 1:
-		var path = ppt.tf_path.EvalWithMetadb(metadb);
-		var path2 = ppt.tf_groupkey_album_lt.EvalWithMetadb(metadb);
-		var path_ = getpath_(path, path2);
-		break;
 	case 2:
-		var path = ppt.tf_path_artist.EvalWithMetadb(metadb);
-		if(ppt.artistMode == 0){
-			var path2 = ppt.tf_groupkey_albumartist.EvalWithMetadb(metadb);
-		}else{
-			var path2 = ppt.tf_groupkey_artist.EvalWithMetadb(metadb);
-		}
-		var path_ = getpath_(path, path2);
+		var path_ = repath(image_path);
 		break;
 	case 3:
 		if (ppt.genre_dir){
@@ -4061,8 +4062,8 @@ function save_image_to_cache(metadb, albumIndex) {
 			var path2 = dir_cover_name;
 			var path_ = getpath_(path, path2);
 		} else{
-			var path = ppt.tf_path_genre.EvalWithMetadb(metadb);
-			var path2 = ppt.tf_groupkey_genre.EvalWithMetadb(metadb);
+			var path = ppt.tf_path_genre;//.EvalWithMetadb(metadb);
+			var path2 = brw.groups[albumIndex].groupkey;//ppt.tf_groupkey_genre.EvalWithMetadb(metadb);
 			var path_ = getpath_(path, path2);
 		}
 		break;
@@ -4111,19 +4112,25 @@ on_load();
 
 function on_load() {
 	if (!fso.FileExists(fb.ProfilePath + "cache\\LoadIMG.js")) {
-		var data = "var fso = new ActiveXObject(\"Scripting.FileSystemObject\");\r\n" + "var Img = new ActiveXObject(\"WIA.ImageFile.1\");\r\n" + "var IP = new ActiveXObject(\"WIA.ImageProcess.1\");\r\n" + "IP.Filters.Add(IP.FilterInfos(\"Scale\").FilterID);//ID = 1\r\n" + "IP.Filters.Add(IP.FilterInfos(\"Crop\").FilterID);//ID = 2\r\n" + "IP.Filters.Add(IP.FilterInfos(\"Convert\").FilterID);//ID = 3\r\n" + "function resize_image(path,crc,tranparent)\r\n" + "{\r\n" + "    var ratio = 1;\r\n" + "    var cachesize = 200;\r\n" + "    var img_w = cachesize, img_h = cachesize, cr_x = 0, cr_y = 0;\r\n" + "    try{\r\n" + "    Img.LoadFile(path);\r\n" + "    }catch(err){\r\n" + "		return false;\r\n" + "    }\r\n" + "if(Img.Height >= Img.Width) {\r\n" + "    ratio = Img.Width / Img.Height;\r\n" + "    img_w = img_w * ratio;\r\n" + "    cr_x = (img_h - img_w)/2;\r\n" + "} else {\r\n" + "    ratio = Img.Height / Img.Width;\r\n" + "    img_h = img_h * ratio;\r\n" + "    cr_y = (img_w - img_h)/2;\r\n" + "}\r\n" + "    IP.Filters(1).Properties(\"MaximumWidth\") = img_w;\r\n" + "    IP.Filters(1).Properties(\"MaximumHeight\") = img_h;\r\n" + "    if(tranparent == \"true\"){\r\n" + "        IP.Filters(3).Properties(\"FormatID\").Value = '{B96B3CAF-0728-11D3-9D7B-0000F81EF32E}';\r\n" + "    }else{\r\n" + "        IP.Filters(3).Properties(\"FormatID\").Value = '{B96B3CAE-0728-11D3-9D7B-0000F81EF32E}';\r\n" + "        IP.Filters(3).Properties(\"Quality\").Value = 95; \r\n" + "    }\r\n" + "    //IP.Filters(2).Properties(\"Left\") = cr_x;\r\n" + "    //IP.Filters(2).Properties(\"Top\") = cr_y;\r\n" + "    //IP.Filters(2).Properties(\"Right\") = cr_x;\r\n" + "    //IP.Filters(2).Properties(\"Bottom\") = cr_y;\r\n" + "    Img = IP.Apply(Img);\r\n" + "    try{\r\n" + "        if(fso.FileExists(WScript.arguments(0) + \"\\\\cache\\\\imgcache\\\\\" + crc))\r\n" + "            fso.DeleteFile(WScript.arguments(0)+ \"\\\\cache\\\\imgcache\\\\\" + crc);\r\n" + "        Img.SaveFile(WScript.arguments(0) + \"\\\\cache\\\\imgcache\\\\\" + crc);\r\n" + "    }catch(err){\r\n" + "		return false;\r\n" + "    }\r\n" + "	return true;\r\n" + "}\r\n" + "resize_image(WScript.arguments(1),WScript.arguments(2),WScript.arguments(3));";
+		var data = "var fso = new ActiveXObject(\"Scripting.FileSystemObject\");\r\n" + "var Img = new ActiveXObject(\"WIA.ImageFile.1\");\r\n" + "var IP = new ActiveXObject(\"WIA.ImageProcess.1\");\r\n" + "IP.Filters.Add(IP.FilterInfos(\"Scale\").FilterID);//ID = 1\r\n" + "IP.Filters.Add(IP.FilterInfos(\"Crop\").FilterID);//ID = 2\r\n" + "IP.Filters.Add(IP.FilterInfos(\"Convert\").FilterID);//ID = 3\r\n" + "function resize_image(path,crc,tranparent)\r\n" + "{\r\n" + "    var ratio = 1;\r\n" + "    var cachesize = 200;\r\n" + "    var img_w = cachesize, img_h = cachesize;//, cr_x = 0, cr_y = 0;\r\n" + "    try{\r\n" + "    Img.LoadFile(path);\r\n" + "    }catch(err){\r\n" + "		return false;\r\n" + "    }\r\n" + "if(Img.Height >= Img.Width) {\r\n" + "    ratio = Img.Width / Img.Height;\r\n" + "    img_w = img_w * ratio;\r\n" + "    //cr_x = (img_h - img_w)/2;\r\n" + "} else {\r\n" + "    ratio = Img.Height / Img.Width;\r\n" + "    img_h = img_h * ratio;\r\n" + "    //cr_y = (img_w - img_h)/2;\r\n" + "}\r\n" + "    IP.Filters(1).Properties(\"MaximumWidth\") = img_w;\r\n" + "    IP.Filters(1).Properties(\"MaximumHeight\") = img_h;\r\n" + "    if(tranparent == \"true\"){\r\n" + "        IP.Filters(3).Properties(\"FormatID\").Value = '{B96B3CAF-0728-11D3-9D7B-0000F81EF32E}';\r\n" + "    }else{\r\n" + "        IP.Filters(3).Properties(\"FormatID\").Value = '{B96B3CAE-0728-11D3-9D7B-0000F81EF32E}';\r\n" + "        IP.Filters(3).Properties(\"Quality\").Value = 95; \r\n" + "    }\r\n" + "    //IP.Filters(2).Properties(\"Left\") = cr_x;\r\n" + "    //IP.Filters(2).Properties(\"Top\") = cr_y;\r\n" + "    //IP.Filters(2).Properties(\"Right\") = cr_x;\r\n" + "    //IP.Filters(2).Properties(\"Bottom\") = cr_y;\r\n" + "    Img = IP.Apply(Img);\r\n" + "    try{\r\n" + "        if(fso.FileExists(WScript.arguments(0) + \"\\\\cache\\\\imgcache\\\\\" + crc))\r\n" + "            fso.DeleteFile(WScript.arguments(0)+ \"\\\\cache\\\\imgcache\\\\\" + crc);\r\n" + "        Img.SaveFile(WScript.arguments(0) + \"\\\\cache\\\\imgcache\\\\\" + crc);\r\n" + "    }catch(err){\r\n" + "		return false;\r\n" + "    }\r\n" + "	return true;\r\n" + "}\r\n" + "resize_image(WScript.arguments(1),WScript.arguments(2),WScript.arguments(3));";
 		if (!fso.FolderExists(fb.ProfilePath + "cache")) fso.CreateFolder(fb.ProfilePath + "cache");
 		if (!fso.FolderExists(fb.ProfilePath + "cache\\imgcache")) fso.CreateFolder(fb.ProfilePath + "cache\\imgcache");
 		var file = fso.CreateTextFile(fb.ProfilePath + "cache\\LoadIMG.js", true, 65001);
 		file.WriteLine(data);
 		file.Close();
 	};
-	var str = artist_cover_dir.split('\\');
-	var parentpath = artist_cover_dir.substring(0, artist_cover_dir.length - str[str.length-1].length - 1);
-	//if(!fso.FolderExists(parentpath)) fso.CreateFolder(parentpath);
-	//if(!fso.FolderExists(artist_cover_dir)) fso.CreateFolder(artist_cover_dir);
-	//if(!fso.FolderExists(album_cover_dir)) fso.CreateFolder(album_cover_dir);
-	str = null;
+	if(album_cover_dir == fb.ProfilePath + "MusicArt\\Album") {
+		if (!fso.FolderExists(fb.ProfilePath + "MusicArt")) fso.CreateFolder(fb.ProfilePath + "MusicArt");
+		if (!fso.FolderExists(fb.ProfilePath + "MusicArt\\Album")) fso.CreateFolder(fb.ProfilePath + "MusicArt\\Album");
+	}
+	if(artist_cover_dir == fb.ProfilePath + "MusicArt\\Artist") {
+		if (!fso.FolderExists(fb.ProfilePath + "MusicArt")) fso.CreateFolder(fb.ProfilePath + "MusicArt");
+		if (!fso.FolderExists(fb.ProfilePath + "MusicArt\\Artist")) fso.CreateFolder(fb.ProfilePath + "MusicArt\\Artist");
+	}
+	if(genre_cover_dir == fb.ProfilePath + "MusicArt\\Genre") {
+		if (!fso.FolderExists(fb.ProfilePath + "MusicArt")) fso.CreateFolder(fb.ProfilePath + "MusicArt");
+		if (!fso.FolderExists(fb.ProfilePath + "MusicArt\\Genre")) fso.CreateFolder(fb.ProfilePath + "MusicArt\\Genre");
+	}
 };
 
 function transfer_covertype(){

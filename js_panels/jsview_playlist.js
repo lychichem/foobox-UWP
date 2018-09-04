@@ -556,7 +556,7 @@ function on_playlists_changed() {
 }
 function on_playlist_switch() {
 	check_pidx();
-	if (show_active_pl) load_pl(20);
+	if (show_active_pl || pidx == plman.ActivePlaylist) load_pl(20);
 }
 function on_playlist_items_selection_change() {
 	glist.focus_id = plman.GetPlaylistFocusItemIndex(pidx);
@@ -569,6 +569,7 @@ function on_item_focus_change(playlist) {
 	}
 }
 function on_playback_new_track(metadb) {
+	if (plman.PlayingPlaylist == plman.ActivePlaylist) repaint_main1 = repaint_main2;
 	//glist.show_playing();
 }
 function check_scroll(scroll___) {

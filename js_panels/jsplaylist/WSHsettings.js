@@ -1,5 +1,5 @@
 ﻿// *****************************************************************************************************************************************
-// SETTINGS functions by Br3tt aka Falstaff (c)2015, mod for foobox http://dreamawake.blog.163.com/
+// SETTINGS functions by Br3tt aka Falstaff (c)2015, mod for foobox http://blog.sina.com.cn/dream7180
 // *****************************************************************************************************************************************
 
 // Objects linked functions
@@ -1005,7 +1005,7 @@ function settings_textboxes_action(pageId, elementId) {
 			var _dir = album_cover_dir;
 			var new_dir = p.settings.pages[pageId].elements[elementId].inputbox.text;
 			if (new_dir == "") new_dir = _dir;
-			else if (new_dir == "%path%") new_dir = "$directory_path(%path%)";
+			if (new_dir != "%path%" && !fso.FolderExists(new_dir)) new_dir = "B:\\MusicArt\\Album";
 			if (new_dir){
 				album_cover_dir = new_dir;
 			}
@@ -1015,7 +1015,7 @@ function settings_textboxes_action(pageId, elementId) {
 			var _dir = artist_cover_dir;
 			var new_dir = p.settings.pages[pageId].elements[elementId].inputbox.text;
 			if (new_dir == "") new_dir = _dir;
-			else if (new_dir == "%path%") new_dir = "$directory_path(%path%)";
+			if (new_dir != "%path%" && !fso.FolderExists(new_dir)) new_dir = "B:\\MusicArt\\Artist";
 			if (new_dir){
 				artist_cover_dir = new_dir;
 			}
@@ -1025,7 +1025,7 @@ function settings_textboxes_action(pageId, elementId) {
 			var _dir = genre_cover_dir;
 			var new_dir = p.settings.pages[pageId].elements[elementId].inputbox.text;
 			if (new_dir == "") new_dir = _dir;
-			else if (new_dir == "%path%") new_dir = "$directory_path(%path%)";
+			if (!fso.FolderExists(new_dir)) new_dir = "B:\\MusicArt\\Genre";
 			if (new_dir){
 				genre_cover_dir = new_dir;
 			}
@@ -1893,7 +1893,7 @@ oPage = function(id, objectName, label, nbrows) {
 			this.elements.push(new oCheckBox(5, 20, cSettings.topBarHeight + rh * 9.25, "顺序播放时自动播放下一个播放列表 (遇到空列表停止)", "repeat_pls", "settings_checkboxes_action", this.id));
 			this.elements.push(new oCheckBox(6, txtbox_x + 30, cSettings.topBarHeight + rh * 11.25, "跳过已存在的文件", "dl_skip", "settings_checkboxes_action", this.id));
 			this.elements.push(new oTextBox(7, txtbox_x + 30, Math.ceil(cSettings.topBarHeight + rh * 12.25), oTextBox_4, cHeaderBar.height, "预设下载目录", dl_prefix_folder, "settings_textboxes_action", this.id));
-			this.elements.push(new oTextBox(8, txtbox_x + 30, Math.ceil(cSettings.topBarHeight + rh * 14.25), oTextBox_4, cHeaderBar.height, "下载的歌曲命名格式", dl_rename_by, "settings_textboxes_action", this.id));
+			this.elements.push(new oTextBox(8, txtbox_x + 30, Math.ceil(cSettings.topBarHeight + rh * 14.25), oTextBox_4, cHeaderBar.height, "下载的音频命名格式", dl_rename_by, "settings_textboxes_action", this.id));
 			break;
 		case 1:
 			// Columns
@@ -2033,10 +2033,10 @@ oPage = function(id, objectName, label, nbrows) {
 		case 4:
 			//jssb options
 			var rh = cSettings.rowHeight;
-			this.elements.push(new oTextBox(0, txtbox_x + 30, Math.ceil(cSettings.topBarHeight + rh * 2.25), oTextBox_2, cHeaderBar.height, "专辑", album_cover_dir, "settings_textboxes_action", this.id));			
-			this.elements.push(new oTextBox(1, txtbox_x + 30, Math.ceil(cSettings.topBarHeight + rh * 4.25), oTextBox_2, cHeaderBar.height, "艺术家", artist_cover_dir, "settings_textboxes_action", this.id));			
-			this.elements.push(new oTextBox(2, txtbox_x + 30, Math.ceil(cSettings.topBarHeight + rh * 6.25), oTextBox_2, cHeaderBar.height, "流派", genre_cover_dir, "settings_textboxes_action", this.id));			
-			this.elements.push(new oTextBox(3, txtbox_x, Math.ceil(cSettings.topBarHeight + rh * 8.25), oTextBox_3, cHeaderBar.height, "歌曲文件夹封面文件名（不要输入扩展名）", dir_cover_name, "settings_textboxes_action", this.id));			
+			this.elements.push(new oTextBox(0, txtbox_x + 30, Math.ceil(cSettings.topBarHeight + rh * 4.25), oTextBox_2, cHeaderBar.height, "专辑", album_cover_dir, "settings_textboxes_action", this.id));			
+			this.elements.push(new oTextBox(1, txtbox_x + 30, Math.ceil(cSettings.topBarHeight + rh * 6.25), oTextBox_2, cHeaderBar.height, "艺术家", artist_cover_dir, "settings_textboxes_action", this.id));			
+			this.elements.push(new oTextBox(2, txtbox_x + 30, Math.ceil(cSettings.topBarHeight + rh * 8.25), oTextBox_2, cHeaderBar.height, "流派（不要定义为 %path%）", genre_cover_dir, "settings_textboxes_action", this.id));			
+			this.elements.push(new oTextBox(3, txtbox_x, Math.ceil(cSettings.topBarHeight + rh * 10.25), oTextBox_3, cHeaderBar.height, "音频文件夹封面文件名（不要输入扩展名）", dir_cover_name, "settings_textboxes_action", this.id));			
 			break;
 		};
 	};
@@ -2074,7 +2074,7 @@ oPage = function(id, objectName, label, nbrows) {
 			gr.gdiDrawText("行为", g_font_b, p.settings.color1, txtbox_x, cSettings.topBarHeight + rh * 3.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
 			gr.gdiDrawText("双击项目默认操作", g_font_b, p.settings.color1, txtbox_x, cSettings.topBarHeight + rh * 6.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
 			gr.gdiDrawText("其他", g_font_b, p.settings.color1, txtbox_x, cSettings.topBarHeight + rh * 8.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
-			gr.gdiDrawText("网络歌曲下载选项", g_font_b, p.settings.color1, txtbox_x, cSettings.topBarHeight + rh * 10.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
+			gr.gdiDrawText("网络音频下载选项", g_font_b, p.settings.color1, txtbox_x, cSettings.topBarHeight + rh * 10.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
 			break;
 		case 1:
 			var listBoxWidth = zoom(120, zdpi);
@@ -2145,11 +2145,13 @@ oPage = function(id, objectName, label, nbrows) {
 			p.settings.opt_fb2k_btn.draw(gr, txtbox_x, cSettings.topBarHeight + rh * 18.5 - (this.offset * cSettings.rowHeight), 255);
 			break;
 		case 4:
-			gr.gdiDrawText("封面路径（封面浏览器会缓存该目录，如果封面位于歌曲所在目录下就填 %path%）", g_font_b, p.settings.color1, txtbox_x, cSettings.topBarHeight + rh * 1.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
-			gr.gdiDrawText("注意：", g_font_b, p.settings.color1, txtbox_x, cSettings.topBarHeight + rh * 10.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
-			gr.gdiDrawText("1. 此处专辑和艺术家封面路径的设置仅用于缓存，不能替代foobar2000封面显示路径的设置 “参数选项--显示--专辑封面”", p.settings.font, p.settings.color2, txtbox_x, cSettings.topBarHeight + rh * 11.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
-			gr.gdiDrawText("2. 支持缓存的图片格式为 jpg 和 png，文件夹和流派封面显示和缓存也是支持这两种格式", p.settings.font, p.settings.color2, txtbox_x, cSettings.topBarHeight + rh * 12.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
-			gr.gdiDrawText("3. B盘为foobar2000文件夹的映射驱动器", p.settings.font, p.settings.color2, txtbox_x, cSettings.topBarHeight + rh * 13.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
+			gr.gdiDrawText("封面储存路径", g_font_b, p.settings.color2, txtbox_x, cSettings.topBarHeight + rh * 1.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
+			gr.gdiDrawText("自定义路径时请确保该路径有效（需提前创建），路径无效则会自动转为默认路径", p.settings.font, p.settings.color2, txtbox_x + 30, cSettings.topBarHeight + rh * 2.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
+			gr.gdiDrawText("如果需要定义为与音频所在目录相同，请填写为 %path%", p.settings.font, p.settings.color2, txtbox_x + 30, cSettings.topBarHeight + rh * 3.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
+			gr.gdiDrawText("注意：", g_font_b, p.settings.color1, txtbox_x, cSettings.topBarHeight + rh * 12.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
+			gr.gdiDrawText("1. 此处设定仅用于下载和缓存，不能替代foobar2000封面读取路径的设置 “参数选项--显示--专辑封面”", p.settings.font, p.settings.color2, txtbox_x, cSettings.topBarHeight + rh * 13.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
+			gr.gdiDrawText("2. 支持的图片格式为 jpg 和 png", p.settings.font, p.settings.color2, txtbox_x, cSettings.topBarHeight + rh * 14.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
+			gr.gdiDrawText("3. B盘为foobar2000文件夹的映射驱动器", p.settings.font, p.settings.color2, txtbox_x, cSettings.topBarHeight + rh * 15.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
 			break;
 		};
 
@@ -2355,6 +2357,7 @@ oPage = function(id, objectName, label, nbrows) {
 					if (idx == cGroup.pattern_idx) {
 						cGroup.pattern_idx = 0;
 						window.SetProperty("SYSTEM.Groups.Pattern Index", cGroup.pattern_idx);
+						window.NotifyOthers("PLMan to change sorting", p.list.groupby[cGroup.pattern_idx].sortOrder);
 						plman.SortByFormatV2(plman.ActivePlaylist, p.list.groupby[cGroup.pattern_idx].sortOrder, 1);
 						p.list.updateHandleList(plman.ActivePlaylist, false);
 						p.list.setItems(true);
@@ -2654,7 +2657,7 @@ oSettings = function() {
 			this.pages.push(new oPage(1, "p.settings.pages[1]", "列", 18));
 			this.pages.push(new oPage(2, "p.settings.pages[2]", "分组", 38));
 			this.pages.push(new oPage(3, "p.settings.pages[3]", "foobox", 19));
-			this.pages.push(new oPage(4, "p.settings.pages[4]", "封面浏览面板", 14));
+			this.pages.push(new oPage(4, "p.settings.pages[4]", "封面浏览面板", 16));
 		};
 		var fin = this.pages.length;
 		for (var i = 0; i < fin; i++) {

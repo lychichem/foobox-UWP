@@ -1,4 +1,4 @@
-﻿//foobox http://dreamawake.blog.163.com/
+﻿//foobox http://blog.sina.com.cn/dream7180
 var g_instancetype = window.InstanceType;
 var ui_mode = window.GetProperty("foobox.UiMode", 0);
 var ui_mode_num = ui_mode ? ui_mode : Math.floor(Math.random() * 4 + 1);
@@ -70,9 +70,9 @@ set_uiborders();
 var rr, gg, bb;
 
 function get_random_color() {
-	rr = Math.floor(Math.random() * 205 + 40);
-	gg = Math.floor(Math.random() * 245);
-	bb = Math.floor(Math.random() * 245);
+	rr = Math.floor(Math.random() * 230 + 25);
+	gg = Math.floor(Math.random() * 255);
+	bb = Math.floor(Math.random() * 255);
 }
 
 var color_arr = [];

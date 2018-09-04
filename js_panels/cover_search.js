@@ -1,4 +1,4 @@
-//by EHfive, https://github.com/EHfive/Some-js-script-for-FB2K, mod by Asion, dreamawake for foobox
+//by EHfive, https://github.com/EHfive/Some-js-script-for-FB2K, mod by Asion, dreamawake for foobox http://blog.sina.com.cn/dream7180
 var debug=false;
 var StatusHeadersAvailable = 1 << 0;
 var StatusDataReadComplete = 1 << 1;
@@ -36,6 +36,7 @@ function search_album(idx, title,artist,album, path, filename){
 				if (xmlHttp.status == 200) {
 					var ncm_back = json(xmlHttp.responseText);
 					var result = ncm_back.result;
+					if(!result || result == null) return;
 					if (ncm_back.code != 200 || !result.songCount) {
 						if(DLItems.length == 0) return;
 						DLItems[idx].downloaded = 1;

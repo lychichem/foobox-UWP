@@ -1,7 +1,7 @@
 ﻿// Name "JSPlaylist"
 // Version "1.3.2"
 // Author "Br3tt aka Falstaff >> http://br3tt.deviantart.com"
-// mod for foobox http://dreamawake.blog.163.com/
+// mod for foobox http://blog.sina.com.cn/dream7180
 var fbx_set = [];
 window.NotifyOthers("get_fbx_set", fbx_set);
 var zdpi = fbx_set[9];
@@ -23,7 +23,7 @@ var btn_fullscr = fbx_set[27];
 var show_shadow = fbx_set[28];
 var sys_scrollbar = fbx_set[29];
 // GLOBALS
-var g_script_version = "6.1.2";
+var g_script_version = "6.1.4";
 var g_middle_clicked = false;
 var g_middle_click_timer = false;
 var g_queue_origin = -1;
@@ -45,6 +45,7 @@ var repaint_cover1 = true,
 	repaint_cover2 = false;
 var window_visible = false;
 var g_mouse_wheel_timer = false;
+var fso = new ActiveXObject("Scripting.FileSystemObject");
 //
 var setting_init = false;
 // drag'n drop from windows system
@@ -640,6 +641,7 @@ oToolbar = function(){
 			if(this.groupAlb_bt.state == ButtonStates.hover){
 				cGroup.pattern_idx = 0;
 				window.SetProperty("SYSTEM.Groups.Pattern Index", cGroup.pattern_idx);
+				window.NotifyOthers("PLMan to change sorting", p.list.groupby[cGroup.pattern_idx].sortOrder);
 				plman.SortByFormatV2(plman.ActivePlaylist, p.list.groupby[cGroup.pattern_idx].sortOrder, 1);
 				p.list.updateHandleList(plman.ActivePlaylist, false);
 				p.list.setItems(true);
@@ -666,6 +668,7 @@ oToolbar = function(){
 			if(this.groupArt_bt.state == ButtonStates.hover){
 				cGroup.pattern_idx = 3;
 				window.SetProperty("SYSTEM.Groups.Pattern Index", cGroup.pattern_idx);
+				window.NotifyOthers("PLMan to change sorting", p.list.groupby[cGroup.pattern_idx].sortOrder);
 				plman.SortByFormatV2(plman.ActivePlaylist, p.list.groupby[cGroup.pattern_idx].sortOrder, 1);
 				p.list.updateHandleList(plman.ActivePlaylist, false);
 				p.list.setItems(true);
@@ -691,7 +694,6 @@ oToolbar = function(){
 			this.dlfolder_bt.checkstate(event, x, y);
 			if(this.dlfolder_bt.state == ButtonStates.hover){
 				var WshShell = new ActiveXObject("WScript.Shell");
-				var fso = new ActiveXObject("Scripting.FileSystemObject");
 				if (!fso.FolderExists(dl_prefix_folder)) fso.CreateFolder(dl_prefix_folder);
 				var filepath = dl_prefix_folder;
 				if (dl_prefix_folder.substring(0,1) == "B") filepath = filepath.replace('B:\\', fb.ProfilePath);
@@ -718,7 +720,6 @@ oToolbar = function(){
 				for (var i = 0; i < p.list.dl_num; i++){
 						client.AbortAsync(i, url = "");
 						try{
-							var fso = new ActiveXObject("Scripting.FileSystemObject");
 							if(p.list.dlitems[i].downloaded < 100) fso.DeleteFile(dl_prefix_folder + "\\" + p.list.dlitems[i].filename, true);
 						}catch(e){}
 					}

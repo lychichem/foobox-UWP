@@ -1,5 +1,5 @@
 ﻿// *****************************************************************************************************************************************
-// headerBar object by Br3tt aka Falstaff (c)2015, mod for foobox http://dreamawake.blog.163.com/
+// headerBar object by Br3tt aka Falstaff (c)2015, mod for foobox http://blog.sina.com.cn/dream7180
 // *****************************************************************************************************************************************
 
 oBorder = function() {
@@ -852,6 +852,7 @@ oHeaderBar = function() {
 		case (idx >= 20 && idx < 50):
 			cGroup.pattern_idx = idx - groupByMenuIdx;
 			window.SetProperty("SYSTEM.Groups.Pattern Index", cGroup.pattern_idx);
+			window.NotifyOthers("PLMan to change sorting", p.list.groupby[cGroup.pattern_idx].sortOrder);
 			// if a Playlist Filter is defined for the Active Playlist (current), DO NOT try to change current pattern!
 			if (!found && default_pattern_index < 0) { // no filter found, we can apply selected pattern and sort the playlist
 				plman.SortByFormatV2(plman.ActivePlaylist, p.list.groupby[cGroup.pattern_idx].sortOrder, 1);

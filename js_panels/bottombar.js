@@ -1,4 +1,4 @@
-﻿//foobox http://dreamawake.blog.163.com/
+﻿//foobox http://blog.sina.com.cn/dream7180
 var time_length = 0;
 var fbx_set = [];
 window.NotifyOthers("get_fbx_set", fbx_set);

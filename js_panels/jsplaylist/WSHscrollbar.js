@@ -1,5 +1,5 @@
 ﻿// *****************************************************************************************************************************************
-// scrollbar & scrollBar object by Br3tt aka Falstaff (c)2015 mod for foobox http://dreamawake.blog.163.com/
+// scrollbar & scrollBar object by Br3tt aka Falstaff (c)2015 mod for foobox http://blog.sina.com.cn/dream7180
 // *****************************************************************************************************************************************
 
 oScrollbar = function( /*themed*/ ) {

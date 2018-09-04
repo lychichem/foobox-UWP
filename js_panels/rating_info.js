@@ -1,4 +1,4 @@
-﻿//foobox http://dreamawake.blog.163.com/
+﻿//foobox http://blog.sina.com.cn/dream7180
 var fbx_set = [];
 window.NotifyOthers("get_fbx_set", fbx_set);
 var zdpi = fbx_set[9];
@@ -17,7 +17,7 @@ var is_mood = window.GetProperty("Display.Mood", true);
 var spec_show_bg = window.GetProperty("Spectrum Background: Show bgcolor", true);
 var spec_show_grid = window.GetProperty("Spectrum Background: Show grid", true);
 var spec_grid_spacing = window.GetProperty("Spectrum Background: Grid spacing", 20);
-var ESL_color_delay = window.GetProperty("ESL变色延时", 600);
+var ESL_color_delay = window.GetProperty("ESL colorized delayed", 600);
 if (spec_grid_spacing <= 0) spec_grid_spacing = 20;
 var spec_h = Math.floor(font_size * 3 / 12) * 20;
 if (spec_h > 300) spec_h = 300;

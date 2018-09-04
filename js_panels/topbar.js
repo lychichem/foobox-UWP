@@ -1,4 +1,4 @@
-﻿//foobox http://dreamawake.blog.163.com/
+﻿//foobox http://blog.sina.com.cn/dream7180
 var fbx_set = [];
 window.NotifyOthers("get_fbx_set", fbx_set);
 //===============
@@ -359,7 +359,7 @@ function on_mouse_lbtn_up(x, y) {
 		}
 	}
 	if (btn_fullscr && buttons[12 + show_vis].MouseUp()) {
-		fb.RunMainMenuCommand('视图/全屏显示');
+		fb.RunMainMenuCommand("视图/全屏显示");
 	}
 	buttons[3].MouseUp();
 	if (ui_noborder) {
@@ -507,7 +507,7 @@ function on_notify_data(name, info) {
 					radio_num = i;break;
 				}
 			}
-			fb.trace("榜单号:" + radio_num);
+			//fb.trace("榜单号:" + radio_num);
 			if (radio_num != null){
 				QQRanklist(radio_num+101, ppt.weblistarr1[radio_num].split(":")[1], ppt.weblistarr1[radio_num].split(":")[0]);
 			} else{

@@ -1,4 +1,4 @@
-﻿//by Asion, mod for foobox http://dreamawake.blog.163.com/
+﻿//by Asion, mod for foobox http://blog.sina.com.cn/dream7180
 ppt = {
 	source: window.GetProperty("Search Source", 1),
 	autosearch: window.GetProperty("Search Box: Auto-validation", false),
@@ -838,7 +838,7 @@ function QQSearch(searchtext, pageid, switchpage){
 								filedata = filedata + '<entry>\r\n'
 								 + '<title>' + songid[i].song + '</title>\r\n'
 								 + '<author>' + songid[i].artist + '</author>\r\n'
-								 + '<ref href="' + "http://182.140.219.28/streamoc.music.tc.qq.com/" + qt + songid[i].strMediaMid + ext + "?vkey=" + ret + "&guid=foobar2000&fromtag=64" + '"/>\r\n'
+								 + '<ref href="' + "http://182.140.219.28/streamoc.music.tc.qq.com/" + qt + songid[i].strMediaMid + ext + "?vkey=" + ret + "&guid=foobar2000&fromtag=8" + '"/>\r\n'
 								 + '</entry>\r\n\r\n';
 							 }
 						}
@@ -1152,7 +1152,7 @@ function QQRanklist(idx, id, listname){
 								filedata = filedata + '<entry>\r\n'
 								 + '<title>' + songid[i].song + '</title>\r\n'
 								 + '<author>' + songid[i].artist + '</author>\r\n'
-								 + '<ref href="' + "http://182.140.219.28/streamoc.music.tc.qq.com/" + qt + songid[i].strMediaMid + ext + "?vkey=" + ret + "&guid=foobar2000&fromtag=64" + '"/>\r\n'
+								 + '<ref href="' + "http://182.140.219.28/streamoc.music.tc.qq.com/" + qt + songid[i].strMediaMid + ext + "?vkey=" + ret + "&guid=foobar2000&fromtag=8" + '"/>\r\n'
 								 + '</entry>\r\n\r\n';
 							 }
 						}
@@ -1437,7 +1437,7 @@ function QQRadiolist(id, listname){
 								filedata = filedata + '<entry>\r\n'
 								 + '<title>' + songid[i].song + '</title>\r\n'
 								 + '<author>' + songid[i].artist + '</author>\r\n'
-								 + '<ref href="' + "http://182.140.219.28/streamoc.music.tc.qq.com/" + qt + songid[i].strMediaMid + ext + "?vkey=" + ret + "&guid=foobar2000&fromtag=64" + '"/>\r\n'
+								 + '<ref href="' + "http://182.140.219.28/streamoc.music.tc.qq.com/" + qt + songid[i].strMediaMid + ext + "?vkey=" + ret + "&guid=foobar2000&fromtag=8" + '"/>\r\n'
 								 + '</entry>\r\n\r\n';
 							 }
 						}

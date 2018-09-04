@@ -1,5 +1,5 @@
 ﻿// *****************************************************************************************************************************************
-// Playlist object by Br3tt aka Falstaff (c)2015, mod for foobox http://dreamawake.blog.163.com/
+// Playlist object by Br3tt aka Falstaff (c)2015, mod for foobox http://blog.sina.com.cn/dream7180
 // *****************************************************************************************************************************************
 
 oGroup = function(index, start, count, total_time_length, focusedTrackId, iscollapsed) {
@@ -2600,7 +2600,6 @@ oList = function(object_name, playlist) {
 		};
 		Context.BuildMenu(_menu, 3, -1);
 		
-		var fso = new ActiveXObject("Scripting.FileSystemObject");
 		if(fso.FileExists(fb.ProfilePath +"assemblies\\Mp3tag\\Mp3tag.exe") && (g_track_type < 2))
 			_menu.AppendMenuItem(MF_STRING, 1012, "用Mp3tag编辑");
 		_child01.AppendTo(_menu, MF_STRING, "选择...");
