@@ -982,7 +982,7 @@ oBrowser = function(name) {
 		_autoplaylist.AppendMenuItem(MF_STRING, 220, "音轨未评级");
 		_menu.AppendMenuItem(MF_SEPARATOR, 0, "");
 		_menu.AppendMenuItem(MF_STRING, 2, "载入播放列表");
-/*		_menu.AppendMenuItem(MF_STRING, 13, "保存所有播放列表");*/
+		_menu.AppendMenuItem(MF_STRING, 13, "保存所有播放列表");
 		if (!add_mode) {
 			_menu.AppendMenuItem(MF_STRING, 4, "保存播放列表");
 			_menu.AppendMenuItem(MF_SEPARATOR, 0, "");
@@ -1070,6 +1070,9 @@ oBrowser = function(name) {
 			break;
 		case (idx == 2):
 			fb.RunMainMenuCommand("File/Load playlist...");
+			break;
+		case (idx == 13):
+			fb.RunMainMenuCommand("文件/保存所有播放列表...");
 			break;
 		case (idx == 3):
 			// set rename it
