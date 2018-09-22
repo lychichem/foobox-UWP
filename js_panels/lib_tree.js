@@ -1,5 +1,5 @@
 ﻿// Name "Library Tree"
-// Version "1.4.0.2"
+// Version "1.3.9.2"
 // Author "Wilb, 汉化:alwaysbeta"
 // mod for foobox http://blog.sina.com.cn/dream7180
 
@@ -33,7 +33,7 @@ function userinterface() {
 		sp = 6,
 		sp1 = 6,
 		sp2 = 6,
-		node_sz = 11;
+		node_sz = 11,
 		zoom_font_sz = 16;
 	this.b1 = 0x04ffffff;
 	this.b2 = 0x04000000;
@@ -51,6 +51,7 @@ function userinterface() {
 	this.icon_w = 17;
 	this.iconcol_c = "";
 	this.iconcol_e = "";
+	this.iconcol_h = "";
 	this.j_font;
 	this.l_s1 = 4;
 	this.l_s2 = 6;
@@ -71,8 +72,8 @@ function userinterface() {
 	this.node_sz = 11;
 	this.trace = function(message) {
 		var trace = true;
-		if (trace) console.log("媒体库目录树: " + message);
-	};
+		if (trace) fb.trace("媒体库目录树: " + message);
+	} // true enables fb.trace
 	if (custom_col) {
 		if (cust_icon_font.length) {
 			cust_icon_font = cust_icon_font.split(",");
@@ -87,8 +88,8 @@ function userinterface() {
 			}
 		}
 	}
-	this.node_style = window.GetProperty(" Node: Custom (No Lines)", false) ? 0 : 1;
-	if (this.node_style > 1 || this.node_style < 0) this.node_style = 1;
+	this.node_style = window.GetProperty(" Node: Custom (No Lines)", false) ? 0 : 1; ////!win_node ? 1 : 2;
+	if (this.node_style > 1 || this.node_style < 0) this.node_style = 0;
 	if (!this.node_style) {
 		if (!icon.charAt(0).length) this.node_style = 1;
 		else try {
@@ -161,6 +162,10 @@ function userinterface() {
 			if (L > 0.31) return n ? 50 : RGB(0, 0, 0);
 			else return n ? 200 : RGB(255, 255, 255);
 		}
+
+	this.draw = function(gr) {
+		gr.FillSolidRect(0, 0, this.w, this.h, this.backcol)
+	}
 	this.outline = function(c, but) {
 		if (but) {
 			if (window.IsTransparent || R(c) + G(c) + B(c) > 30) return RGBA(0, 0, 0, 36);
@@ -184,7 +189,8 @@ function userinterface() {
 		this.textcol_h = "";
 		this.textselcol = "";
 		this.txt_box = "";
-	}	
+	}
+
 	this.icon_col = function(c) {
 		if(ui_mode < 3) this.iconcol_c = this.node_style ? [RGB(248, 248, 248), RGB(248, 248, 248)] : this.textcol;
 		else this.iconcol_c = this.node_style ? [this.backcol, this.backcol] : this.textcol;
@@ -201,6 +207,7 @@ function userinterface() {
 			this.iconcol_h = get_grad(this.iconcol_h, 15, -14);
 		}
 	}
+
 	this.get_colors = function() {
 		switch (ui_mode) {
 		case (1):
@@ -259,10 +266,10 @@ function userinterface() {
 		this.txt_box = this.textcol;
 		this.textsymbcol = this.textcol;
 		this.icon_col();
-		this.ibeamcol2 = window.IsTransparent || !this.backcolsel ? 0xff0099ff : this.backcolsel != this.searchcol ? this.backcolsel : 0xff0099ff;
+		this.ibeamcol = window.IsTransparent || !this.backcolsel ? 0xff0099ff : this.backcolsel != this.searchcol ? this.backcolsel : 0xff0099ff;
 	}
 	this.get_colors();
-	
+
 	this.get_font = function() {
 		this.font = {
 			Name: fbx_set[13],
@@ -277,7 +284,7 @@ function userinterface() {
 		this.j_font = GdiFont(this.font.Name, this.font.Size * 1.5, 0);
 		this.calc_text();
 	}
-	
+
 	this.calc_text = function() {
 		var i = gdi.CreateImage(1, 1),
 			g = i.GetGraphics();
@@ -306,19 +313,12 @@ function userinterface() {
 		i.ReleaseGraphics(g);
 		i.Dispose();
 	}
-	this.block = function() {
-		return this.w <= 10 || this.h <= 10 || !window.IsVisible;
-	}
-	this.draw = function(gr) {
-		gr.FillSolidRect(0, 0, this.w, this.h, this.backcol);
-	}
 }
 var ui = new userinterface();
 
 function scrollbar() {
 	var smoothness = 1 - window.GetProperty("ADV.Scroll: Smooth Scroll Level 0-1", 0.6561);
 	smoothness = Math.max(Math.min(smoothness, 0.99), 0.01);
-	this.bar_timer = false;
 	this.count = -1;
 	this.draw_timer = false;
 	this.hover = false;
@@ -328,7 +328,6 @@ function scrollbar() {
 	this.scroll_step = window.GetProperty(" Scroll - Mouse Wheel Step", 6);
 	this.smooth = window.GetProperty(" Scroll: Smooth Scroll", true);
 	this.timer_but = false;
-	this.init = true;
 	this.x = 0;
 	this.y = 0;
 	this.w = 0;
@@ -352,7 +351,6 @@ function scrollbar() {
 	this.initial_drag_y = 0; // dragging
 	this.leave = function() {
 		if (this.b_is_dragging) return;
-		this.hover = !this.hover;
 		this.hover = false;
 		this.hover_o = false;
 		window.RepaintRect(this.x, this.y, this.w, this.h);
@@ -396,13 +394,11 @@ function scrollbar() {
 		this.scrollbar_height = Math.round(this.h - this.but_h * 2);
 		this.bar_ht = Math.max(Math.round(this.scrollbar_height * this.rows_drawn / this.row_count), 20);
 		if (this.bar_ht > cursor_max) this.bar_ht = cursor_max;
-		//fb.trace(this.bar_ht);
 		this.scrollbar_travel = this.scrollbar_height - this.bar_ht;
 		// scrolling info
 		this.scrollable_lines = this.row_count - this.rows_drawn;
 		this.ratio = this.row_count / this.scrollable_lines;
 		this.bar_y = this.but_h + this.scrollbar_travel * (this.delta * this.ratio) / (this.row_count * this.row_h);
-		//fb.trace(this.bar_y);
 		this.bar_y = Math.min(this.bar_y, this.h - this.bar_ht);
 		this.drag_distance_per_row = this.scrollbar_travel / this.scrollable_lines;
 		// panel info
@@ -419,7 +415,7 @@ function scrollbar() {
 
 		}
 	}
-	
+
 	this.lbtn_up = function(p_x, p_y) {
 		var x = p_x - this.x;
 		var y = p_y - this.y;
@@ -521,19 +517,17 @@ function panel_operations() {
 		DT_END_ELLIPSIS = 0x00008000,
 		grps = [],
 		i = 0,
-		sort = "",
-		js_stnd = window.GetProperty("ADV.Scrollbar Height Always Full", true);
-	js_stnd = !js_stnd ? 2 : 0;
+		sort = "";
 	var view_ppt = [
-	window.GetProperty(" View 01: Name // Pattern", "按艺术家 // %artist%|%album%|[[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%"), 
+		window.GetProperty(" View 01: Name // Pattern", "按艺术家 // %artist%|%album%|[[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%"), 
 		window.GetProperty(" View 02: Name // Pattern", "按专辑艺术家 // %album artist%|%album%|[[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%"), 
-		window.GetProperty(" View 03: Name // Pattern", "按艺术家(简单) // %artist%|%title%"),
-		window.GetProperty(" View 04: Name // Pattern", "按专辑艺术家 - 专辑 // [%album artist% - ]['['%date%']' ]%album%|[[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%"), 
+		window.GetProperty(" View 03: Name // Pattern", "按艺术家(简单) // %artist%|%title%"), 
+		window.GetProperty(" View 04: Name // Pattern", "按专辑艺术家 - 专辑 // [%album artist% - ]%album%|[[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%"), 
 		window.GetProperty(" View 05: Name // Pattern", "按专辑[专辑艺术家] // %album%[ '['%album artist%']']|[[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%"), 
 		window.GetProperty(" View 06: Name // Pattern", "按专辑 // %album%|[[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%"), 
 		window.GetProperty(" View 07: Name // Pattern", "按流派 // %<genre>%|[%album artist% - ]%album%|[[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%"), 
-		window.GetProperty(" View 08: Name // Pattern", "按年份 // $year($replace(%date%,/,-,.,-))|[%album artist% - ]%album%|[[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%"),
-		window.GetProperty(" View 09: Name // Pattern", "按日期 // %date%|[%album artist% - ]%album%|[[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%"),
+		window.GetProperty(" View 08: Name // Pattern", "按年份 // $year($replace(%date%,/,-,.,-))|[%album artist% - ]%album%|[[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%"), 
+		window.GetProperty(" View 09: Name // Pattern", "按日期 // %date%|[%album artist% - ]%album%|[[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%"), 
 		window.GetProperty(" View 10: Name // Pattern", "按目录名称 // %directory%|[%album artist% - ]%album%|[[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%")];
 	var nm = "",
 		ppt_l = view_ppt.length + 1;
@@ -544,19 +538,18 @@ function panel_operations() {
 	if (!window.GetProperty("SYSTEM.View Update", false)) {
 		i = view_ppt.length + 1;
 		window.SetProperty(" View " + (i < 10 ? "0" + i : i) + ": Name // Pattern", null);
-		view_ppt.push(window.GetProperty(" View " + (i < 10 ? "0" + i : i) + ": Name // Pattern", "按文件路径 // $directory_path(%path%)|%filename_ext%$nodisplay{%subsong%}"));
+		view_ppt.push(window.GetProperty(" View " + (i < 10 ? "0" + i : i) + ": Name // Pattern", "按文件路径 // $directory_path(%path%)|%filename_ext%"));
 		window.SetProperty("SYSTEM.View Update", true);
 	}
-
 	var filter_ppt = [
-	window.GetProperty(" View Filter 01: Name // Query", "过滤 // Query Not Configurable"), 
-		window.GetProperty(" View Filter 02: Name // Query", "无损 // \"$info(encoding)\" IS lossless"), 
+	window.GetProperty(" View Filter 01: Name // Query", "过滤 // Query Not Configurable"),
+		window.GetProperty(" View Filter 02: Name // Query", "无损 // \"$info(encoding)\" IS lossless"),
 		window.GetProperty(" View Filter 03: Name // Query", "有损 // \"$info(encoding)\" IS lossy"),
-		window.GetProperty(" View Filter 04: Name // Query", "无增益 // %replaygain_track_gain% MISSING"), 
-		window.GetProperty(" View Filter 05: Name // Query", "从未播放 // %play_count% MISSING"), 
-		window.GetProperty(" View Filter 06: Name // Query", "经常播放 // %play_count% GREATER 9"), 
-		window.GetProperty(" View Filter 07: Name // Query", "最近添加 // %added% DURING LAST 2 WEEKS"), 
-		window.GetProperty(" View Filter 08: Name // Query", "最近播放 // %last_played% DURING LAST 2 WEEKS"), 
+		window.GetProperty(" View Filter 04: Name // Query", "无增益 // %replaygain_track_gain% MISSING"),
+		window.GetProperty(" View Filter 05: Name // Query", "从未播放 // %play_count% MISSING"),
+		window.GetProperty(" View Filter 06: Name // Query", "经常播放 // %play_count% GREATER 9"),
+		window.GetProperty(" View Filter 07: Name // Query", "最近添加 // %added% DURING LAST 2 WEEKS"),
+		window.GetProperty(" View Filter 08: Name // Query", "最近播放 // %last_played% DURING LAST 2 WEEKS"),
 		window.GetProperty(" View Filter 09: Name // Query", "最高评级 // %rating% IS 5")];
 	var filt_l = filter_ppt.length + 1;
 	for (i = filt_l; i < filt_l + 90; i++) {
@@ -592,6 +585,7 @@ function panel_operations() {
 	this.s_h = 0;
 	this.s_w1 = 0;
 	this.s_w2 = 0;
+	this.statistics = false;
 	this.tf = "";
 	this.autofit = window.GetProperty(" Auto Fit", true);
 	this.base = window.GetProperty(" Node: Root Hide-0 All Music-1 View Name-2", 2);
@@ -599,36 +593,29 @@ function panel_operations() {
 	this.syncType = window.GetProperty(" Library Sync: Auto-0, Initialisation Only-1", 0);
 	this.s_show = window.GetProperty(" Search: Hide-0, SearchOnly-1, Search+Filter-2", 2);
 	if (!this.s_show) this.autofit = true;
-	this.f_font = GdiFont(fbx_set[13], fbx_set[14], 1);
-	this.f_but_ft = GdiFont(fbx_set[13], fbx_set[14] - 2, fbx_set[15]);
 	this.filter_by = window.GetProperty("SYSTEM.Filter By", 0);
 	this.full_line = window.GetProperty(" Text Whole Line Clickable", false);
-	this.pn_h_auto = window.GetProperty("ADV.Height Auto [Expand/Collapse With Root]", false) && this.base;
-	this.init = true;
-	this.pn_h_max = window.GetProperty("ADV.Height Auto-Expand", 578);
-	this.pn_h_min = window.GetProperty("ADV.Height Auto-Collapse", 100);
-	if (this.pn_h_auto) {
-		this.pn_h = window.GetProperty("SYSTEM.Height", 578);
-		window.MaxHeight = window.MinHeight = this.pn_h;
+	this.get_font = function() {
+		this.f_font = GdiFont(fbx_set[13], fbx_set[14], 1);
+		this.f_but_ft = GdiFont(fbx_set[13], fbx_set[14] - 2, fbx_set[15]);
 	}
-	var replaceAt = function(s, n, t) {
-			return s.substring(0, n) + t + s.substring(n + 1);
-		}
+	this.get_font();
 	this.reset = window.GetProperty("SYSTEM.Reset Tree", false);
 	this.search_paint = function() {
-		window.RepaintRect(ui.margin, 0, ui.w - ui.margin, this.s_h);
+		window.RepaintRect(Math.round(ui.margin), 0, ui.w - ui.margin, this.s_h);
 	}
-	this.setHeight = function(n) {
-		if (!this.pn_h_auto) return;
-		this.pn_h = n ? this.pn_h_max : this.pn_h_min;
-		window.MaxHeight = window.MinHeight = this.pn_h;
-		window.SetProperty("SYSTEM.Height", this.pn_h);
+	this.set_statistics_mode = function() {
+		this.statistics = false;
+		var chk = this.grp[this.view_by].name + this.grp[this.view_by].type + this.filt[this.filter_by].name + this.filt[this.filter_by].type;
+		chk = chk.toUpperCase();
+		if (chk.indexOf("ADD") != -1 || chk.indexOf("PLAY") != -1 || chk.indexOf("RATING") != -1) this.statistics = true;
 	}
 	this.show_counts = window.GetProperty(" Node: Item Counts 0-Hide 1-Tracks 2-Sub-Items", 1);
 	this.show_tracks = window.GetProperty(" Node: Show Tracks", true);
 	this.sort = function(li) {
 		switch (this.view_by) {
 		case this.folder_view:
+			//li.OrderByPath();
 			li.OrderByRelativePath();
 			break;
 		default:
@@ -664,7 +651,6 @@ function panel_operations() {
 		this.grp = [];
 		this.grp_sort = "";
 		this.multi_process = false;
-		this.multi_swap = false;
 		this.filter_by = filter;
 		this.mv_sort = "";
 		this.view = "";
@@ -700,23 +686,20 @@ function panel_operations() {
 		this.filter_by = Math.min(this.filter_by, this.filt.length - 1);
 		this.view_by = Math.min(this.view_by, this.grp.length - 1);
 		if (this.grp[this.view_by].type.indexOf("%<") != -1) this.multi_process = true;
+		this.cond = false;
+		this.unbranched = false;
 		if (this.view_by != this.folder_view) {
-			if (this.multi_process) {
-				if (this.grp[this.view_by].type.indexOf("$swapbranchprefix{%<") != -1) this.multi_swap = true;
-				this.mv_sort = fb.TitleFormat((this.grp[this.view_by].type.indexOf("album artist") != -1 || this.grp[this.view_by].type.indexOf("%artist%") == -1 && this.grp[this.view_by].type.indexOf("%<artist>%") == -1 && this.grp[this.view_by].type.indexOf("$meta(artist") == -1 ? "%album artist%" : "%artist%") + "|%album%|[[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%");
-			}
+			if (this.multi_process) this.mv_sort = (this.grp[this.view_by].type.indexOf("album artist") != -1 || this.grp[this.view_by].type.indexOf("%artist%") == -1 && this.grp[this.view_by].type.indexOf("%<artist>%") == -1 && this.grp[this.view_by].type.indexOf("$meta(artist") == -1 ? "%album artist%" : "%artist%") + "|%album%|[[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%";
 			this.grp_split = this.grp[this.view_by].type.replace(/^\s+/, "").split("|");
+			var chkCond = this.grp[this.view_by].type.replace(/[^\[\]\(\)\|]/g, '').replace(/\(\)/g, "").replace(/\[\]/g, "");
+			if (chkCond.indexOf("(|") != -1 || chkCond.indexOf("[|") != -1 || this.show_counts == 2) this.cond = true;
+			var count = (this.grp[this.view_by].type.match(/\|/g) || []).length;
+			if (!count && !this.cond) this.unbranched = true;
+			if (!this.cond) this.tf = this.grp_split.length > 1 ? this.grp_split.pop() : this.grp_split[0];
 			for (i = 0; i < this.grp_split.length; i++) {
 				this.multi_value[i] = this.grp_split[i].indexOf("%<") != -1 ? true : false;
 				if (this.multi_value[i]) {
 					this.grp_split_orig[i] = this.grp_split[i].slice();
-					if (this.grp_split[i].indexOf("$swapbranchprefix{%<") != -1) {
-						var ip1 = this.grp_split[i].indexOf("$swapbranchprefix{%<"),
-							ip2 = this.grp_split[i].indexOf(">%}", ip1) + 2;
-						this.grp_split[i] = replaceAt(this.grp_split[i], ip2, "");
-						this.grp_split_orig[i] = this.grp_split[i].replace(/\$swapbranchprefix{%</g, "%<");
-						this.grp_split[i] = this.grp_split[i].replace(/\$swapbranchprefix{%</g, "~%<");
-					}
 					this.grp_split[i] = this.grp_split[i].replace(/%<album artist>%/i, "$if3(%<#album artist#>%,%<#artist#>%,%<#composer#>%,%<#performer#>%)").replace(/%<album>%/i, "$if2(%<#album#>%,%<#venue#>%)").replace(/%<artist>%/i, "$if3(%<artist>%,%<album artist>%,%<composer>%,%<performer>%)").replace(/<#/g, "<").replace(/#>/g, ">");
 					this.grp_split_clone[i] = this.grp_split[i].slice();
 					this.grp_split[i] = this.grp_split_orig[i].replace(/[<>]/g, "");
@@ -725,28 +708,26 @@ function panel_operations() {
 				if (this.multi_value[i]) this.grp_split[i] = this.grp_split_clone[i].replace(/%</g, "#!#$meta_sep(").replace(/>%/g, "," + "@@)#!#");
 				this.view += (this.grp_split[i] + "|");
 			}
-			if (!this.multi_process) this.view = this.view.replace(/\$nodisplay{.*?}/gi, "");
-			else while (this.view.indexOf("$nodisplay{") != -1) {
-				var ix1 = this.view.indexOf("$nodisplay{"),
-					ix2 = this.view.indexOf("}", ix1);
-				this.view = replaceAt(this.view, ix2, " #@#");
-				this.view = this.view.replace("$nodisplay{", "#@#");
-			}
 			this.view = this.view.slice(0, -1);
-			while (this.grp_sort.indexOf("$nodisplay{") != -1) {
-				var ix1 = this.grp_sort.indexOf("$nodisplay{"),
-					ix2 = this.grp_sort.indexOf("}", ix1);
-				this.grp_sort = replaceAt(this.grp_sort, ix2, " ");
-				this.grp_sort = this.grp_sort.replace("$nodisplay{", "");
+			if (!this.cond) {
+				if (this.tf.indexOf("%<") != -1) this.tf = this.tf.replace(/%<album artist>%/i, "$if3(%<#album artist#>%,%<#artist#>%,%<#composer#>%,%<#performer#>%)").replace(/%<album>%/i, "$if2(%<#album#>%,%<#venue#>%)").replace(/%<artist>%/i, "$if3(%<artist>%,%<album artist>%,%<composer>%,%<performer>%)").replace(/<#/g, "<").replace(/#>/g, ">");
+				this.grp_sort = this.grp_sort + this.tf.replace(/[<>]/g, "");
+				if (this.tf.indexOf("%<") != -1) this.tf = this.tf.replace(/%</g, "#!#$meta_sep(").replace(/>%/g, "," + "@@)#!#");
 			}
 		}
+		this.set_statistics_mode();
 		window.SetProperty("SYSTEM.Filter By", filter);
 		window.SetProperty("SYSTEM.View By", view);
-		this.baseName = this.base == 2 ? this.grp[this.view_by].name : "所有音乐";
+		this.baseName = this.base == 2 ? this.grp[view].name : "所有音乐";
 		this.f_menu = [];
 		this.menu = [];
 		for (i = 0; i < this.grp.length; i++) this.menu.push(this.grp[i].name);
-		for (i = 0; i < this.filt.length; i++) this.f_menu.push(this.filt[i].name);
+		for (i = 0; i < this.filt.length; i++) {
+			this.f_menu.push(this.filt[i].name);
+		}
+		//this.menu.splice(this.menu.length, 0, "面板属性");
+		//if (this.syncType) this.menu.splice(this.menu.length, 0, "刷新");
+		//this.menu.splice(this.menu.length, 0, "配置...");
 		this.calc_text();
 	}
 	this.fields(this.view_by, this.filter_by);
@@ -769,13 +750,14 @@ function panel_operations() {
 		} else window.SetProperty(" View Filter " + (i < 10 ? "0" + i : i) + ": Name // Query", null);
 	}
 	for (i = k; i < k + 5; i++) window.SetProperty(" View Filter " + (i < 10 ? "0" + i : i) + ": Name // Query", " // ");
+
 	this.on_size = function() {
 		this.f_x1 = ui.w - ui.margin - this.f_w[this.filter_by] - this.f_sw;
 		this.s_x = Math.round(ui.margin + ui.row_h);
 		this.s_w1 = ui.w - ui.margin;
 		this.s_w2 = this.s_show > 1 ? this.f_x1 - this.s_x - 11 : this.s_w1 - Math.round(ui.row_h * 0.75) - this.s_x + 1;
 		var g_zoom = Math.floor(ui.font.Size / 12 * 100);
-		this.s_sp = Math.ceil(26 * g_zoom / 100);//zoom(26, g_zoom);
+		this.s_sp = Math.ceil(26 * g_zoom / 100);
 		this.s_h = this.s_show ? this.s_sp + ui.margin : ui.margin;
 		this.sp = ui.h - this.s_h - (this.s_show ? 0 : ui.margin);
 		this.rows = this.sp / ui.row_h;
@@ -835,113 +817,52 @@ var v = new v_keys();
 
 function library_manager() {
 	var exp = [],
-		full_list, full_list_need_sort = false,
+		lib_update = false,
+		name_idx = [],
+		name_ix = [],
 		node = [],
 		node_s = [],
+		process = false,
 		scr = [],
 		sel = [];
 	this.allmusic = [];
-	this.init = false;
+	this.init = true;
 	this.list;
 	this.none = "";
 	this.node = [];
-	this.process = false;
 	this.root = [];
 	this.time = fb.CreateProfiler();
-	this.upd = 0, this.upd_search = false;
-	var prefix = window.GetProperty("ADV.$swapbranchprefix. Prefixes to Swap (| Separator)", "A|The").split("|");
-	this.rememberTree = window.GetProperty(" Tree: Remember State", true) ? 1 : 0;
-	if (this.rememberTree) {
-		exp = JSON.parse(window.GetProperty("SYSTEM.Remember.Exp", JSON.stringify(exp)));
-		this.process = window.GetProperty("SYSTEM.Remember.Proc", false);
-		scr = JSON.parse(window.GetProperty("SYSTEM.Remember.Scr", JSON.stringify(scr)));
-		sel = JSON.parse(window.GetProperty("SYSTEM.Remember.Sel", JSON.stringify(sel)));
-		p.s_txt = window.GetProperty("SYSTEM.Remember.Search Text", "");
-	} else {
-		window.SetProperty("SYSTEM.Remember.Exp", JSON.stringify(exp));
-		window.SetProperty("SYSTEM.Remember.Scr", JSON.stringify(scr));
-		window.SetProperty("SYSTEM.Remember.Sel", JSON.stringify(sel));
-		window.SetProperty("SYSTEM.Remember.Search Text", "");
-	}
-	var arraysIdentical = function(a, b) {
-			var i = a.length;
-			if (i != b.length) return false;
-			while (i--) if (a[i] !== b[i]) return false;
-			return true;
-		}
-	var binaryInsert = function(arr, item) {
-			var min = 0,
-				max = arr.length,
-				index = Math.floor((min + max) / 2);
-			while (max > min) {
-				if (sort(item, arr[index]) < 0) max = index;
-				else min = index + 1;
-				index = Math.floor((min + max) / 2);
-			}
-			return index;
-		}
-	this.checkTree = function() {
-		if (!this.upd && !(this.init && this.rememberTree)) return;
-		this.init = false;
-		timer.reset(timer.update, timer.updatei);
-		this.time.Reset();
-		pop.subCounts = {
-			"standard": {},
-			"search": {},
-			"filter": {}
-		};
-		this.rootNodes(this.upd == 2 ? 2 : 1, this.process);
-		this.upd = 0;
-	}
-	this.removed_f = function(handle_list) {
-		var j = handle_list.Count;
-		while (j--) {
-			var i = this.list.Find(handle_list.Item(j));
-			if (i != -1) {
-				this.list.RemoveById(i);
-				node.splice(i, 1);
-			}
-		}
-	}
-	this.removed_s = function(handle_list) {
-		var j = handle_list.Count;
-		while (j--) {
-			var i = p.list.Find(handle_list.Item(j));
-			if (i != -1) {
-				p.list.RemoveById(i);
-				node_s.splice(i, 1);
-			}
-		}
-	}
-	var sort = function(a, b) {
-			return a.toString().replace(/^\?/, "").replace(/(\d+)/g, function(n) {
-				return ('0000' + n).slice(-5)
-			}).localeCompare(b.toString().replace(/^\?/, "").replace(/(\d+)/g, function(n) {
-				return ('0000' + n).slice(-5)
-			}));
-		}
+	this.upd = false, this.upd_search = false;
 	var tr_sort = function(data) {
 			data.sort(function(a, b) {
 				return parseFloat(a.tr) - parseFloat(b.tr)
 			});
 			return data;
 		}
+	this.update = function() {
+		if (ui.w < 1 || !window.IsVisible) this.upd = true;
+		else {
+			this.refresh();
+			this.upd = false;
+		}
+	}
 
-	this.treeState = function(b, state, handle_list, n) {
-		if (!state) return;
-		p.search_paint();
-		p.tree_paint();
+	this.refresh = function(b) {
+		if (sbar.draw_timer) return;
+		if (this.upd) {
+			p.search_paint();
+			p.tree_paint();
+		}
 		try {
-			var i = 0,
-				ix = -1,
+			var ix = -1,
 				tr = 0;
-			this.process = false;
+			process = false;
 			if (pop.tree.length && (!b || b && !p.reset)) {
 				tr = 0;
-				exp = [];
-				this.process = true;
+				process = true;
+				scr = [];
 				sel = [];
-				for (i = 0; i < pop.tree.length; i++) {
+				for (var i = 0; i < pop.tree.length; i++) {
 					tr = !p.base ? pop.tree[i].tr : pop.tree[i].tr - 1;
 					if (pop.tree[i].child.length) exp.push({
 						tr: tr,
@@ -958,160 +879,31 @@ function library_manager() {
 				}
 				ix = pop.get_ix(0, p.s_h + ui.row_h / 2, true, false);
 				tr = 0;
-				var l = Math.min(Math.floor(ix + p.rows), pop.tree.length);
-				if (ix != -1) {
-					scr = [];
-					for (i = ix; i < l; i++) {
-						tr = pop.tree[i].tr;
-						scr.push({
-							tr: tr,
-							a: pop.tree[i].name,
-							b: tr != 0 ? pop.tree[pop.tree[i].par].name : "",
-							c: tr > 1 ? pop.tree[pop.tree[pop.tree[i].par].par].name : ""
-						})
-					}
+				var l = Math.min(Math.floor(p.rows), pop.tree.length);
+				for (var i = ix; i < l; i++) {
+					tr = pop.tree[i].tr;
+					scr.push({
+						tr: tr,
+						a: pop.tree[i].name,
+						b: tr != 0 ? pop.tree[pop.tree[i].par].name : "",
+						c: tr > 1 ? pop.tree[pop.tree[pop.tree[i].par].par].name : ""
+					})
 				}
-				tr_sort(exp);
-				if (this.rememberTree) {
-					window.SetProperty("SYSTEM.Remember.Exp", JSON.stringify(exp));
-					window.SetProperty("SYSTEM.Remember.Proc", this.process);
-					window.SetProperty("SYSTEM.Remember.Scr", JSON.stringify(scr));
-					window.SetProperty("SYSTEM.Remember.Sel", JSON.stringify(sel));
-				}
-			}
-			if (!b || b && !p.reset && this.rememberTree) {
-				window.SetProperty("SYSTEM.Remember.Search Text", p.s_txt);
-				if (state == 1) return;
+				exp = JSON.stringify(tr_sort(exp));
 			}
 		} catch (e) {}
-		if (!handle_list) {
-			this.get_library();
-			this.rootNodes(1, this.process);
-		} else {
-			switch (n) {
-			case 0:
-				this.added(handle_list);
-				if (ui.w < 1 || !window.IsVisible) this.upd = 2;
-				else timer.lib_update();
-				break;
-			case 1:
-				var upd_done = false,
-					tree_type = p.view_by != p.folder_view ? 0 : 1;
-				switch (tree_type) { // check for changes to items; any change updates all
-				case 0:
-					var tfo = fb.TitleFormat(p.view),
-						items_b = tfo.EvalWithMetadbs(handle_list).toArray();
-					for (var j = 0; j < handle_list.Count; j++) {
-						var h = this.list.Find(handle_list.Item(j));
-						if (h != -1) {
-							if (!arraysIdentical(node[h], items_b[j].split("|"))) {
-								this.removed(handle_list);
-								this.added(handle_list);
-								if (ui.w < 1 || !window.IsVisible) this.upd = 2;
-								else timer.lib_update();
-								upd_done = true;
-								break;
-							}
-						}
-					}
-					tfo.Dispose();
-					break;
-				case 1:
-					for (var j = 0; j < handle_list.Count; j++) {
-						var h = this.list.Find(handle_list.Item(j));
-						if (h != -1) {
-							if (!arraysIdentical(node[h], fb.GetLibraryRelativePath(this.list.Item(h)).split("\\"))) {
-								this.removed(handle_list);
-								this.added(handle_list);
-								if (ui.w < 1 || !window.IsVisible) this.upd = 2;
-								else timer.lib_update();
-								upd_done = true;
-								break;
-							}
-						};
-					}
-					break;
-				}
-				if (upd_done) break;
-				if (p.filter_by > 0 && p.s_show > 1) { // filter: check for addns / removals if not done
-					var startFilter = this.list.Clone(),
-						new_filter_items = fb.CreateHandleList();
-					try {
-						new_filter_items = fb.GetQueryItems(handle_list, p.filt[p.filter_by].type);
-					} catch (e) {}
-					var newFilter = this.list.Clone();
-					newFilter.InsertRange(newFilter.Count, new_filter_items);
-					startFilter.Sort();
-					newFilter.Sort();
-					newFilter.MakeDifference(startFilter);
-					if (newFilter.Count) {
-						this.removed_f(handle_list);
-						this.added_f(new_filter_items);
-						if (!p.s_txt) p.list = this.list;
-						if (ui.w < 1 || !window.IsVisible) this.upd = 2;
-						else timer.lib_update();
-					}
-					startFilter.Dispose();
-					newFilter.Dispose();
-					new_filter_items.Dispose();
-				}
-				if (p.s_txt) { // search: check for addns / removals if not done
-					var startSearch = p.list.Clone(),
-						new_search_items = fb.CreateHandleList();
-					try {
-						new_search_items = fb.GetQueryItems(handle_list, p.s_txt);
-					} catch (e) {}
-					new_search_items.Sort();
-					if (p.filter_by > 0 && p.s_show > 1) {
-						var newFilt = this.list.Clone();
-						newFilt.Sort();
-						new_search_items.MakeIntersection(newFilt);
-						newFilt.Dispose();
-					}
-					var newSearch = p.list.Clone();
-					newSearch.InsertRange(newSearch.Count, new_search_items);
-					startSearch.Sort();
-					newSearch.Sort();
-					newSearch.MakeDifference(startSearch);
-					if (newSearch.Count) {
-						this.removed_s(handle_list);
-						this.added_s(new_search_items);
-						this.node = node_s.slice();
-						if (!p.list.Count) {
-							pop.tree = [];
-							pop.line_l = 0;
-							sbar.set_rows(0);
-							this.none = "没有与搜索条件匹配的项";
-							p.tree_paint();
-							break;
-						}
-						if (ui.w < 1 || !window.IsVisible) this.upd = 2;
-						else timer.lib_update();
-					}
-					startSearch.Dispose();
-					newSearch.Dispose();
-					new_search_items.Dispose();
-				}
-				break;
-			case 2:
-				this.removed(handle_list);
-				if (ui.w < 1 || !window.IsVisible) this.upd = 2;
-				else timer.lib_update();
-				break;
-			}
-			if (handle_list) handle_list.Dispose();
-		}
+		lib_update = true;
+		this.get_library();
+		this.rootNodes();
 	}
 
 	this.get_library = function() {
 		this.empty = "";
-		if (full_list) full_list.Dispose();
 		if (this.list) this.list.Dispose();
 		if (p.list) p.list.Dispose();
 		this.time.Reset();
 		this.none = "";
 		this.list = fb.GetLibraryItems();
-		full_list = this.list.Clone();
 		if (!this.list.Count || !fb.IsMediaLibraryEnabled()) {
 			pop.tree = [];
 			pop.line_l = 0;
@@ -1136,65 +928,80 @@ function library_manager() {
 
 	this.rootNames = function(li, search) {
 		var i = 0,
+			tf = fb.TitleFormat(p.view),
 			total;
 		switch (search) {
 		case 0:
 			p.sort(this.list);
 			li = p.list = this.list;
-			node = [];
-			var arr = node;
+			name_idx = [];
 			break;
 		case 1:
-			node_s = [];
-			var arr = node_s;
+			name_ix = [];
 			break;
 		}
 		total = li.Count;
-		var tree_type = p.view_by != p.folder_view ? 0 : 1;
+		var tree_type = !search ? p.view_by != p.folder_view ? !p.base ? 0 : 1 : !p.base ? 2 : 3 : p.view_by != p.folder_view ? !p.base ? 4 : 5 : !p.base ? 6 : 7;
 		switch (tree_type) {
 		case 0:
-			var tfo = fb.TitleFormat(p.view);
-			for (i = 0; i < total; i++) arr[i] = tfo.EvalWithMetadb(li.Item(i)).split("|");
-			tfo.Dispose();
+			for (i = 0; i < total; i++) {
+				node[i] = tf.EvalWithMetadb(li.Item(i)).split("|");
+				name_idx[i] = !node[i][0].length || node[i][0] == "#!##!#" ? "?" : node[i][0];
+			};
 			break;
 		case 1:
-			for (i = 0; i < total; i++) arr[i] = fb.GetLibraryRelativePath(li.Item(i)).split("\\");
+			for (i = 0; i < total; i++) {
+				node[i] = tf.EvalWithMetadb(li.Item(i)).split("|");
+			};
+			break;
+		case 2:
+			for (i = 0; i < total; i++) {
+				node[i] = fb.GetLibraryRelativePath(li.Item(i)).split("\\");
+				name_idx[i] = node[i][0];
+			};
+			break;
+		case 3:
+			for (i = 0; i < total; i++) {
+				node[i] = fb.GetLibraryRelativePath(li.Item(i)).split("\\");
+			};
+			break;
+		case 4:
+			for (i = 0; i < total; i++) {
+				node_s[i] = tf.EvalWithMetadb(li.Item(i)).split("|");
+				name_ix[i] = !node_s[i][0].length || node_s[i][0] == "#!##!#" ? "?" : node_s[i][0];
+			};
+			break;
+		case 5:
+			for (i = 0; i < total; i++) {
+				node_s[i] = tf.EvalWithMetadb(li.Item(i)).split("|");
+			};
+			break;
+		case 6:
+			for (i = 0; i < total; i++) {
+				node_s[i] = fb.GetLibraryRelativePath(li.Item(i)).split("\\");
+				name_ix[i] = node_s[i][0];
+			};
+			break;
+		case 7:
+			for (i = 0; i < total; i++) {
+				node_s[i] = fb.GetLibraryRelativePath(li.Item(i)).split("\\");
+			};
 			break;
 		}
 	}
 
-	this.prefixes = function(n) {
-		if (n.indexOf("~#!#") == -1) return n;
-		var found = false,
-			j = 0,
-			ln = 0;
-		for (j = 0; j < prefix.length; j++) if (n.indexOf(prefix[j] + " ") != -1) {
-			found = true;
-			break;
-		}
-		if (!found) return n.replace("~#!#", "#!#");
-		var pr1 = n.split("~#!#"),
-			pr2 = pr1[1].split("#!#"),
-			pr = pr2[0].split("@@");
-		for (var i = 0; i < pr.length; i++) for (j = 0; j < prefix.length; j++) {
-			ln = prefix[j].length + 1;
-			if (pr[i].substr(0, ln) == prefix[j] + " ") pr[i] = pr[i].substr(ln) + ", " + prefix[j];
-		}
-		return pr1[0] + "#!#" + pr.join("@@") + "#!#" + pr2[1];
-	}
-
-	this.rootNodes = function(lib_update, process) {
-		if (!this.list.Count) return;
+	this.rootNodes = function() {
 		this.root = [];
 		var i = 0,
 			j = 1,
 			h = 0,
 			l = 0,
 			n = "";
-		if (p.s_txt && (this.upd_search || lib_update == 1)) {
+		if (p.s_txt && (this.upd_search || lib_update)) {
+			if (!this.list.Count) return;
 			this.none = "";
 			try {
-				p.list = fb.GetQueryItems(this.list, p.s_txt);
+				p.list = fb.GetQueryItems(this.list, p.s_txt)
 			} catch (e) {};
 			if (!p.list.Count) {
 				pop.tree = [];
@@ -1211,10 +1018,25 @@ function library_manager() {
 			p.list = this.list;
 			this.node = node.slice()
 		};
-		var n_o = "#get_node#",
+		var arr = !p.s_txt ? name_idx : name_ix,
+			n_o = "#get_node#",
 			nU = "",
 			total = p.list.Count;
-		if (p.base) {
+		if (!p.base) for (l = 0; l < total; l++) {
+			n = arr[l];
+			nU = n.toUpperCase();
+			if (nU != n_o) {
+				n_o = nU;
+				this.root[i] = {
+					name: n,
+					sel: false,
+					child: [],
+					item: []
+				};
+				this.root[i].item.push(l);
+				i++;
+			} else this.root[i - 1].item.push(l);
+		} else {
 			this.root[0] = {
 				name: p.baseName,
 				sel: false,
@@ -1222,73 +1044,12 @@ function library_manager() {
 				item: []
 			};
 			for (l = 0; l < total; l++) this.root[0].item.push(l);
-		} else switch (p.multi_process) {
-		case false:
-			for (l = 0; l < total; l++) {
-				n = this.node[l][0];
-				nU = n.toUpperCase();
-				if (nU != n_o) {
-					n_o = nU;
-					this.root[i] = {
-						name: n,
-						sel: false,
-						child: [],
-						item: []
-					};
-					this.root[i].item.push(l);
-					i++;
-				} else this.root[i - 1].item.push(l);
-			}
-			break;
-		case true:
-			switch (p.multi_swap) {
-			case false:
-				for (l = 0; l < total; l++) {
-					n = this.node[l][0];
-					nU = n.toUpperCase();
-					if (nU != n_o) {
-						n_o = nU;
-						n = n.replace(/#!##!#/g, "?");
-						this.root[i] = {
-							name: n.replace(/#@#.*?#@#/g, ""),
-							sel: false,
-							child: [],
-							item: [],
-							srt: n
-						};
-						this.root[i].item.push(l);
-						i++;
-					} else this.root[i - 1].item.push(l);
-				}
-				break;
-			case true:
-				for (l = 0; l < total; l++) {
-					n = this.node[l][0];
-					nU = n.toUpperCase();
-					if (nU != n_o) {
-						n_o = nU;
-						n = n.replace(/~#!##!#|#!##!#/g, "?");
-						n = this.prefixes(n);
-						this.root[i] = {
-							name: n.replace(/#@#.*?#@#/g, ""),
-							sel: false,
-							child: [],
-							item: [],
-							srt: n
-						};
-						this.root[i].item.push(l);
-						i++;
-					} else this.root[i - 1].item.push(l);
-				}
-				break;
-			}
-			break;
 		}
 		if (!lib_update) sbar.reset(); /* Draw tree -> */
 		if (!p.base || p.s_txt) pop.buildTree(this.root, 0);
 		if (p.base) pop.branch(this.root[0], true);
-		if (p.pn_h_auto && (p.init || lib_update) && p.pn_h == p.pn_h_min && pop.tree[0]) pop.clear_child(pop.tree[0]);
-		p.init = false; // ui.trace("populated in: " + this.time.Time / 1000 + " seconds");
+		p.init = false;
+
 		if (lib_update && process) {
 			try {
 				var exp_l = exp.length,
@@ -1297,34 +1058,39 @@ function library_manager() {
 					tree_l = pop.tree.length;
 				for (h = 0; h < exp_l; h++) {
 					if (exp[h].tr == 0) {
-						for (j = 0; j < tree_l; j++) if (pop.tree[j].name.toUpperCase() == exp[h].a.toUpperCase()) {
-							pop.branch(pop.tree[j]);
-							tree_l = pop.tree.length;
-							break;
-						}
+						for (j = 0; j < tree_l; j++)
+							if (pop.tree[j].name.toUpperCase() == exp[h].a.toUpperCase()) {
+								pop.branch(pop.tree[j]);
+								tree_l = pop.tree.length;
+								break;
+							}
 					} else if (exp[h].tr > 0) {
-						for (j = 0; j < tree_l; j++) if (pop.tree[j].name.toUpperCase() == exp[h].b.toUpperCase() && pop.tree[pop.tree[j].par].name.toUpperCase() == exp[h].a.toUpperCase()) {
-							pop.branch(pop.tree[j]);
-							tree_l = pop.tree.length;
-							break;
-						}
+						for (j = 0; j < tree_l; j++)
+							if (pop.tree[j].name.toUpperCase() == exp[h].b.toUpperCase() && pop.tree[pop.tree[j].par].name.toUpperCase() == exp[h].a.toUpperCase()) {
+								pop.branch(pop.tree[j]);
+								tree_l = pop.tree.length;
+								break;
+							}
 					}
 				}
 				for (h = 0; h < sel_l; h++) {
 					if (sel[h].tr == 0) {
-						for (j = 0; j < tree_l; j++) if (pop.tree[j].name.toUpperCase() == sel[h].a.toUpperCase()) {
-							pop.tree[j].sel = true;
-							break;
-						}
+						for (j = 0; j < tree_l; j++)
+							if (pop.tree[j].name.toUpperCase() == sel[h].a.toUpperCase()) {
+								pop.tree[j].sel = true;
+								break;
+							}
 					} else if (sel[h].tr == 1) {
-						for (j = 0; j < tree_l; j++) if (pop.tree[j].name.toUpperCase() == sel[h].a.toUpperCase() && pop.tree[pop.tree[j].par].name.toUpperCase() == sel[h].b.toUpperCase()) {
-							pop.tree[j].sel = true;
-							break;
-						}
+						for (j = 0; j < tree_l; j++) 
+							if (pop.tree[j].name.toUpperCase() == sel[h].a.toUpperCase() && pop.tree[pop.tree[j].par].name.toUpperCase() == sel[h].b.toUpperCase()) {
+								pop.tree[j].sel = true;
+								break;
+							}
 					} else if (sel[h].tr > 1) {
-						for (j = 0; j < tree_l; j++) if (pop.tree[j].name.toUpperCase() == sel[h].a.toUpperCase() && pop.tree[pop.tree[j].par].name.toUpperCase() == sel[h].b.toUpperCase() && pop.tree[pop.tree[pop.tree[j].par].par].name.toUpperCase() == sel[h].c.toUpperCase()) {
-							pop.tree[j].sel = true;
-							break;
+						for (j = 0; j < tree_l; j++)
+							if (pop.tree[j].name.toUpperCase() == sel[h].a.toUpperCase() && pop.tree[pop.tree[j].par].name.toUpperCase() == sel[h].b.toUpperCase() && pop.tree[pop.tree[pop.tree[j].par].par].name.toUpperCase() == sel[h].c.toUpperCase()) {
+								pop.tree[j].sel = true;
+								break;
 						}
 					}
 				}
@@ -1332,23 +1098,26 @@ function library_manager() {
 				h = 0;
 				while (h < scr_l && !scr_pos) {
 					if (scr[h].tr == 0) {
-						for (j = 0; j < tree_l; j++) if (pop.tree[j].name.toUpperCase() == scr[h].a.toUpperCase()) {
-							sbar.check_scroll(!h ? j * ui.row_h : (j - 3) * ui.row_h);
-							scr_pos = true;
-							break;
-						}
+						for (j = 0; j < tree_l; j++) 
+							if (pop.tree[j].name.toUpperCase() == scr[h].a.toUpperCase()) {
+								sbar.check_scroll(!h ? j * ui.row_h : (j - 3) * ui.row_h);
+								scr_pos = true;
+								break;
+							}
 					} else if (scr[h].tr == 1 && !scr_pos) {
-						for (j = 0; j < tree_l; j++) if (pop.tree[j].name.toUpperCase() == scr[h].a.toUpperCase() && pop.tree[pop.tree[j].par].name.toUpperCase() == scr[h].b.toUpperCase()) {
-							sbar.check_scroll(!h ? j * ui.row_h : (j - 3) * ui.row_h);
-							scr_pos = true;
-							break;
-						}
+						for (j = 0; j < tree_l; j++)
+							if (pop.tree[j].name.toUpperCase() == scr[h].a.toUpperCase() && pop.tree[pop.tree[j].par].name.toUpperCase() == scr[h].b.toUpperCase()) {
+								sbar.check_scroll(!h ? j * ui.row_h : (j - 3) * ui.row_h);
+								scr_pos = true;
+								break;
+							}
 					} else if (scr[h].tr > 1 && !scr_pos) {
-						for (j = 0; j < tree_l; j++) if (pop.tree[j].name.toUpperCase() == scr[h].a.toUpperCase() && pop.tree[pop.tree[j].par].name.toUpperCase() == scr[h].b.toUpperCase() && pop.tree[pop.tree[pop.tree[j].par].par].name.toUpperCase() == scr[h].c.toUpperCase()) {
-							sbar.check_scroll(!h ? j * ui.row_h : (j - 3) * ui.row_h);
-							scr_pos = true;
-							break;
-						}
+						for (j = 0; j < tree_l; j++)
+							if (pop.tree[j].name.toUpperCase() == scr[h].a.toUpperCase() && pop.tree[pop.tree[j].par].name.toUpperCase() == scr[h].b.toUpperCase() && pop.tree[pop.tree[pop.tree[j].par].par].name.toUpperCase() == scr[h].c.toUpperCase()) {
+								sbar.check_scroll(!h ? j * ui.row_h : (j - 3) * ui.row_h);
+								scr_pos = true;
+								break;
+							}
 					}
 					h++;
 				}
@@ -1357,271 +1126,39 @@ function library_manager() {
 					p.tree_paint();
 				}
 			} catch (e) {};
-		} else this.treeState(false, this.rememberTree);
+		}
 		if (lib_update && !process) {
 			sbar.reset();
 			p.tree_paint();
 		}
-	}
-
-	this.binaryInsert = function(folder, insert, li, n) {
-		switch (true) {
-		case !folder:
-			var tfo = fb.TitleFormat(p.view),
-				item_a = tfo.EvalWithMetadbs(insert).toArray();
-			tfo.Dispose();
-			for (var j = 0; j < insert.Count; j++) {
-				var i = binaryInsert(n, item_a[j].split("|"));
-				n.splice(i, 0, item_a[j].split("|"));
-				li.Insert(i, insert.Item(j));
-			}
-			break;
-		case folder:
-			for (var j = 0; j < insert.Count; j++) {
-				var item_a = fb.GetLibraryRelativePath(insert.Item(j)).split("\\");
-				var i = binaryInsert(n, item_a);
-				if (i != -1) {
-					n.splice(i, 0, item_a);
-					li.Insert(i, insert.Item(j));
-				}
-			}
-			break;
-		}
-	}
-
-	this.added = function(handle_list) {
-		var addType = p.multi_process || p.nodisplay || handle_list.Count > 100 ? 0 : 1;
-		switch (addType) {
-		case 0:
-			full_list.InsertRange(full_list.Count, handle_list);
-			full_list_need_sort = true;
-			if (p.filter_by > 0 && p.s_show > 1) {
-				var new_filter_items = fb.CreateHandleList();
-				try {
-					new_filter_items = fb.GetQueryItems(handle_list, p.filt[p.filter_by].type);
-				} catch (e) {}
-				this.list.InsertRange(this.list.Count, new_filter_items);
-				p.sort(this.list);
-				new_filter_items.Dispose();
-			} else {
-				if (full_list_need_sort) p.sort(full_list);
-				this.list = full_list.Clone();
-				full_list_need_sort = false;
-			}
-			p.sort(handle_list);
-			var tfo = fb.TitleFormat(p.view),
-				item_a = tfo.EvalWithMetadbs(handle_list).toArray();
-			for (var j = 0; j < handle_list.Count; j++) {
-				var i = this.list.Find(handle_list.Item(j));
-				if (i != -1) node.splice(i, 0, item_a[j].split("|"));
-			}
-			tfo.Dispose();
-			if (this.list.Count) this.empty = "";
-			if (p.s_txt) {
-				var new_search_items = fb.CreateHandleList(),
-					tree_type = p.view_by != p.folder_view ? 0 : 1;
-				try {
-					new_search_items = fb.GetQueryItems(handle_list, p.s_txt);
-				} catch (e) {}
-				p.list.InsertRange(p.list.Count, new_search_items);
-				p.sort(p.list);
-				p.sort(new_search_items);
-				switch (tree_type) {
-				case 0:
-					var tfo = fb.TitleFormat(p.view),
-						item_a = tfo.EvalWithMetadbs(new_search_items).toArray();
-					for (var j = 0; j < new_search_items.Count; j++) {
-						var i = p.list.Find(new_search_items.Item(j));
-						if (i != -1) node_s.splice(i, 0, item_a[j].split("|"));
-					}
-					tfo.Dispose();
-					break;
-				case 1:
-					for (var j = 0; j < new_search_items.Count; j++) {
-						var i = p.list.Find(new_search_items.Item(j));
-						if (i != -1) node_s.splice(i, 0, fb.GetLibraryRelativePath(this.list.Item(i)).split("\\"));
-					}
-					break;
-				}
-				this.node = node_s.slice();
-				new_search_items.Dispose();
-				if (!p.list.Count) {
-					pop.tree = [];
-					pop.line_l = 0;
-					sbar.set_rows(0);
-					this.none = "没有与搜索条件匹配的项";
-					p.tree_paint();
-				}
-			} else p.list = this.list;
-			break;
-		case 1:
-			var lis = fb.CreateHandleList();
-			if (p.filter_by > 0 && p.s_show > 1) {
-				try {
-					lis = fb.GetQueryItems(handle_list, p.filt[p.filter_by].type);
-				} catch (e) {}
-			} else lis = handle_list;
-			p.sort(lis);
-			this.binaryInsert(p.view_by == p.folder_view, lis, this.list, node);
-			if (this.list.Count) this.empty = "";
-			if (p.s_txt) {
-				var new_search_items = fb.CreateHandleList();
-				try {
-					new_search_items = fb.GetQueryItems(handle_list, p.s_txt);
-				} catch (e) {}
-				this.binaryInsert(p.view_by == p.folder_view, new_search_items, p.list, node_s);
-				this.node = node_s.slice();
-				new_search_items.Dispose();
-				if (!p.list.Count) {
-					pop.tree = [];
-					pop.line_l = 0;
-					sbar.set_rows(0);
-					this.none = "没有与搜索条件匹配的项";
-					p.tree_paint();
-				}
-			} else p.list = this.list;
-			lis.Dispose();
-			break
-		}
-	}
-
-	this.added_f = function(handle_list) {
-		var addType = p.multi_process || p.nodisplay || handle_list.Count > 100 ? 0 : 1;
-		switch (addType) {
-		case 0:
-			this.list.InsertRange(this.list.Count, handle_list);
-			p.sort(this.list);
-			p.sort(handle_list);
-			var tfo = fb.TitleFormat(p.view),
-				item_a = tfo.EvalWithMetadbs(handle_list).toArray();
-			tfo.Dispose();
-			for (var j = 0; j < handle_list.Count; j++) {
-				var i = this.list.Find(handle_list.Item(j));
-				if (i != -1) node.splice(i, 0, item_a[j].split("|"));
-			}
-			if (!this.list.Count) this.none = "没有与搜索条件匹配的项";
-			break;
-		case 1:
-			this.binaryInsert(p.view_by == p.folder_view, handle_list, this.list, node);
-			break;
-		}
-	}
-
-	this.added_s = function(handle_list) {
-		var addType = p.multi_process || p.nodisplay || handle_list.Count > 100 ? 0 : 1;
-		switch (addType) {
-		case 0:
-			p.list.InsertRange(p.list.Count, handle_list);
-			p.sort(p.list);
-			var tfo = fb.TitleFormat(p.view),
-				item_a = tfo.EvalWithMetadbs(handle_list).toArray();
-			tfo.Dispose();
-			for (var j = 0; j < handle_list.Count; j++) {
-				var i = p.list.Find(handle_list.Item(j));
-				if (i != -1) node_s.splice(i, 0, item_a[j].split("|"));
-			}
-			break;
-		case 1:
-			this.binaryInsert(p.view_by == p.folder_view, handle_list, p.list, node_s);
-			break;
-		}
-	}
-
-	this.removed = function(handle_list) {
-		var j = handle_list.Count;
-		while (j--) {
-			var i = this.list.Find(handle_list.Item(j));
-			if (i != -1) {
-				this.list.RemoveById(i);
-				node.splice(i, 1);
-			}
-		}
-		if (p.filter_by > 0 && p.s_show > 1) {
-			j = handle_list.Count;
-			if (full_list_need_sort) p.sort(full_list);
-			full_list_need_sort = false;
-			while (j--) {
-				i = full_list.Find(handle_list.Item(j));
-				if (i != -1) full_list.RemoveById(i);
-			}
-		} else full_list = this.list.Clone();
-		if (p.s_txt) {
-			j = handle_list.Count;
-			while (j--) {
-				i = p.list.Find(handle_list.Item(j));
-				if (i != -1) {
-					p.list.RemoveById(i);
-					node_s.splice(i, 1);
-				}
-			}
-			this.node = node_s.slice();
-			if (!p.list.Count) {
-				pop.tree = [];
-				pop.line_l = 0;
-				sbar.set_rows(0);
-				this.none = "没有与搜索条件匹配的项";
-				p.tree_paint();
-			}
-		} else p.list = this.list;
-		if (!full_list.Count) {
-			this.empty = "没有可以显示的项目\n\n请先配置好媒体库\n\n文件>参数选项>媒体库";
-			this.root = [];
-			pop.tree = [];
-			pop.line_l = 0;
-			sbar.set_rows(0);
-			p.tree_paint();
-		}
+		lib_update = false;
 	}
 }
 var lib = new library_manager();
 
 function populate() {
 	var get_pos = -1,
-		handles = null,
-		is_focused = false,
 		ix_o = 0,
-		last_pressed_coord = {
-			x: undefined,
-			y: undefined
-		},
 		last_sel = -1,
-		lbtn_dn = false,
 		m_i = -1,
 		m_br = -1,
 		nd = [],
 		row_o = 0,
-		sent = false,
 		tt = "",
-		tooltip = window.GetProperty(" Tooltips", true),
 		tt_c = 0,
 		tt_y = 0,
 		tt_id = -1;
-	//var ap = window.GetProperty(" Playlist: Play On Send From Menu");
-	//ap = ap === false ? false : ap === true ? true : false;
-	this.autoplay = window.GetProperty(" Playlist: Play On Enter Or Send From Menu", false);
+	this.autoplay = window.GetProperty(" Playlist: Play On Send From Menu", false);
 	var btn_pl = window.GetProperty(" Playlist Use: 0 or 1", "General,1,Alt+LeftBtn,1,MiddleBtn,1").replace(/\s+/g, "").split(",");
 	if (btn_pl[0] == "LeftBtn") window.SetProperty(" Playlist Use: 0 or 1", "General," + btn_pl[1] + ",Alt+LeftBtn," + btn_pl[3] + ",MiddleBtn," + btn_pl[5]);
 	var alt_lbtn_pl = btn_pl[3] == 1 ? true : false,
 		mbtn_pl = btn_pl[5] == 1 ? true : false;
-	var hotKeys = window.GetProperty(" Hot Key: 1-10 // Assign JScript Panel index in keyboard shortcuts", "CollapseAll,0,PlaylistAdd,0,PlaylistInsert,0,Search,0,SearchClear,0").replace(/^[,\s]+|[,\s]+$/g, "").split(",");
-	var addIX = parseFloat(hotKeys[3]),
-		collapseAllIX = parseFloat(hotKeys[1]),
-		insertIX = parseFloat(hotKeys[5]),
-		searchClearIX = parseFloat(hotKeys[9]),
-		searchFocusIX = parseFloat(hotKeys[7]);
 	var custom_sort = window.GetProperty(" Playlist: Custom Sort", "");
-	if (custom_sort.length) var tf_cs = fb.TitleFormat(custom_sort);
 	this.dbl_action = window.GetProperty(" Text Double-Click: ExplorerStyle-0 Play-1 Send-2", 1);
-	var lib_playlist = "媒体库视图";
-	this.autoFill = window.GetProperty(" Playlist: AutoFill", true);
-	var selection_holder = fb.AcquireUiSelectionHolder();
+	var lib_playlist = "媒体库视图"; //window.GetProperty(" Playlist", "媒体库视图");
+	var sgl_fill = window.GetProperty(" Text Single-Click: AutoFill Playlist", true);
 	this.line_l = 0;
 	this.sel_items = [];
-	this.subCounts = {
-		"standard": {},
-		"filter": {},
-		"search": {}
-	};
 	this.tree = [];
 	window.SetProperty("SYSTEM.Playlist Checked", true);
 	var arr_contains = function(arr, item) {
@@ -1636,11 +1173,15 @@ function populate() {
 			}
 			return n;
 		}
+
 	var draw_node = function(gr, j, x, y) {
-			if (!ui.hot && j > 1) j -= 2;
-			x = Math.round(x);
-			y = Math.round(y);
-			gr.DrawImage(nd[j], x, y, nd[j].Width, nd[j].Height, 0, 0, nd[j].Width, nd[j].Height);
+		if (!ui.hot && j > 1) j -= 2;
+		x = Math.round(x);
+		y = Math.round(y);
+		gr.DrawImage(nd[j], x, y, nd[j].Width, nd[j].Height, 0, 0, nd[j].Width, nd[j].Height);
+	}
+	var num_sort = function(a, b) {
+			return a - b;
 		}
 	var plID = function(Playlist_Name) {
 			for (var i = 0; i < plman.PlaylistCount; i++)
@@ -1648,16 +1189,15 @@ function populate() {
 			plman.CreatePlaylist(plman.PlaylistCount, Playlist_Name);
 			return i;
 		}
-	var num_sort = function(a, b) {
-			return a - b;
-		}
 	var sort = function(a, b) {
-			return a.srt.replace(/^\?/, "").replace(/(\d+)/g, function(n) {
-				return ('0000' + n).slice(-5)
-			}).localeCompare(b.srt.replace(/^\?/, "").replace(/(\d+)/g, function(n) {
-				return ('0000' + n).slice(-5)
-			}));
-		}
+		a = a.name.replace(/^\?/, "").replace(/(\d+)/g, function(n) {
+			return ('0000' + n).slice(-5)
+		});
+		b = b.name.replace(/^\?/, "").replace(/(\d+)/g, function(n) {
+			return ('0000' + n).slice(-5)
+		});
+		return a.localeCompare(b);
+	}
 	var uniq = function(a) {
 			var j = 0,
 				len = a.length,
@@ -1676,13 +1216,13 @@ function populate() {
 		if (y < p.s_h) return;
 		var ix = this.get_ix(x, y, true, false);
 		p.pos = ix;
-		if (ix < this.tree.length && ix >= 0) if (this.check_ix(this.tree[ix], x, y, true)) {
-			this.clear();
-			this.tree[ix].sel = true;
-			this.get_sel_items();
-			this.load(this.sel_items, true, true, false, pl, false);
-			lib.treeState(false, lib.rememberTree);
-		}
+		if (ix < this.tree.length && ix >= 0)
+			if (this.check_ix(this.tree[ix], x, y, true)) {
+				this.clear();
+				this.tree[ix].sel = true;
+				this.get_sel_items();
+				this.load(this.sel_items, true, true, false, pl, false);
+			}
 	}
 	this.auto = window.GetProperty(" Node: Auto Collapse", false);
 	this.branch_chg = function(br) {
@@ -1704,7 +1244,7 @@ function populate() {
 	this.check_row = function(x, y) {
 		m_br = -1;
 		var im = this.get_ix(x, y, true, false);
-		if (im >= this.tree.length || im < 0) return -1;
+		if (im >= this.tree.length || im < 0) return;
 		var item = this.tree[im];
 		if (x < Math.round(ui.pad * item.tr) + ui.icon_w + ui.margin && (!item.track || p.base && item.tr == 0)) m_br = im;
 		return im;
@@ -1725,24 +1265,20 @@ function populate() {
 	}
 	this.expandNodes = function(obj, am) {
 		this.branch(obj, !am ? false : true, true, true);
-		if (obj.child) for (var k = 0; k < obj.child.length; k++) if (!obj.child[k].track) this.expandNodes(obj.child[k]);
+		if (obj.child)
+			for (var k = 0; k < obj.child.length; k++)
+				if (!obj.child[k].track) this.expandNodes(obj.child[k]);
 	}
 	this.gen_pl = btn_pl[1] == 1 ? true : false;
 	this.get_sel_items = function() {
 		p.tree_paint();
 		var i = 0;
 		this.sel_items = [];
-		for (i = 0; i < this.tree.length; i++) if (this.tree[i].sel) this.sel_items.push.apply(this.sel_items, this.tree[i].item);
+		for (i = 0; i < this.tree.length; i++)
+			if (this.tree[i].sel) this.sel_items.push.apply(this.sel_items, this.tree[i].item);
 		this.sel_items = uniq(this.sel_items);
 	}
-	this.getHandles = function(n) {
-		if (n) this.get_sel_items();
-		var handle_list = fb.CreateHandleList();
-		try {
-			for (var i = 0; i < this.sel_items.length; i++) handle_list.Add(p.list.Item(this.sel_items[i]));
-		} catch (e) {}
-		return handle_list;
-	}
+	this.handle_list = null;
 	this.leave = function() {
 		if (men.r_up || tt.Text) return;
 		m_br = -1;
@@ -1754,25 +1290,13 @@ function populate() {
 	this.mbtn_up = function(x, y) {
 		this.add(x, y, mbtn_pl);
 	}
-	this.on_char = function(code) {
-		if (p.s_search || code != v.copy) return;
-		var handle_list = this.getHandles(true);
-		fb.CopyHandleListToClipboard(handle_list);
-		handle_list.Dispose();
-	}
-	this.on_focus = function(p_is_focused) {
-		is_focused = p_is_focused;
-		if (p_is_focused && handles && handles.Count) selection_holder.SetSelection(handles);
-	}
 	this.row = function(y) {
 		return Math.round((y - p.s_h - ui.row_h * 0.5) / ui.row_h);
 	}
-	this.setGetPos = function(pos) {
-		m_i = get_pos = pos;
-	}
+	this.selection_holder = fb.AcquireUiSelectionHolder();
 
 	this.create_tooltip = function() {
-		if (!tooltip) return;
+		//if (!tooltip) return;
 		if (tt) tt.Dispose();
 		tt = window.CreateTooltip(ui.font.Name, ui.font.Size, ui.font.Style);
 		tt_y = ui.row_h - window.GetProperty(" Row Vertical Item Padding", 3);
@@ -1782,7 +1306,7 @@ function populate() {
 	}
 
 	this.activate_tooltip = function(ix, y) {
-		if (tt_id == ix || Math.round(ui.pad * this.tree[ix].tr + ui.margin) + ui.icon_w + (!tooltip || !p.full_line ? this.tree[ix].w : this.tree[ix].tt_w) <= sbar.tree_w - ui.sel) return;
+		if (tt_id == ix || Math.round(ui.pad * this.tree[ix].tr + ui.margin) + ui.icon_w + (!p.full_line ? this.tree[ix].w : this.tree[ix].tt_w) <= sbar.tree_w - ui.sel) return;
 		if (tt_c == 2) {
 			tt_id = ix;
 			return;
@@ -1806,53 +1330,23 @@ function populate() {
 			l = base ? 0 : p.base ? br.tr : br.tr + 1,
 			n = "",
 			n_o = "#get_branch#",
-			nU = "",
-			pos = -1;
+			nU = "";
 		if (folderView) base = false;
 		if (base) node = false;
-		var get = !p.s_txt && !base || p.s_txt;
-		switch (p.multi_process) {
-		case false:
-			for (k = 0; k < br_l; k++) {
-				pos = br.item[k];
-				try {
-					if (base) n = lib.node[pos][l];
-					if (get) {
-						if (l < lib.node[pos].length - 1) n = lib.node[pos][l];
-						else n = "#get_track#";
-					}
-					isTrack = p.show_tracks ? false : l < lib.node[pos].length - 2 ? false : true;
-					if (n == "#get_track#") {
-						n = lib.node[pos][l];
-						isTrack = true;
-					}
-					nU = n.toUpperCase();
-					if (n_o != nU) {
-						n_o = nU;
-						br.child[i] = {
-							name: n,
-							sel: false,
-							child: [],
-							track: isTrack,
-							item: []
-						};
-						br.child[i].item.push(pos);
-						i++;
-					} else br.child[i - 1].item.push(pos);
-				} catch (e) {}
-			}
-			break;
-		case true:
-			switch (p.multi_swap) {
-			case false:
-				var srt = "";
+		switch (true) {
+			case (p.cond):
 				for (k = 0; k < br_l; k++) {
-					pos = br.item[k];
+					var pos = br.item[k];
 					try {
-						if (base) n = lib.node[pos][l];
-						if (get) {
-							if (l < lib.node[pos].length - 1) n = lib.node[pos][l];
-							else n = "#get_track#";
+						if (base) {
+							n = lib.node[pos][l];
+							if (!n || n == "#!##!#") n = "?";
+						}
+						if (!p.s_txt && !base || p.s_txt) {
+							if (l < lib.node[pos].length - 1) {
+								n = lib.node[pos][l];
+								if (!n || n == "#!##!#") n = "?";
+							} else n = "#get_track#";
 						}
 						isTrack = p.show_tracks ? false : l < lib.node[pos].length - 2 ? false : true;
 						if (n == "#get_track#") {
@@ -1862,16 +1356,12 @@ function populate() {
 						nU = n.toUpperCase();
 						if (n_o != nU) {
 							n_o = nU;
-							n = n.replace(/#!##!#/g, "?");
-							srt = n;
-							n = n.replace(/#@#.*?#@#/g, "");
 							br.child[i] = {
 								name: n,
 								sel: false,
 								child: [],
 								track: isTrack,
-								item: [],
-								srt: srt
+								item: []
 							};
 							br.child[i].item.push(pos);
 							i++;
@@ -1879,35 +1369,35 @@ function populate() {
 					} catch (e) {}
 				}
 				break;
-			case true:
-				var srt = "";
+			case (!p.cond):
+				var tf = fb.TitleFormat(p.tf);
 				for (k = 0; k < br_l; k++) {
-					pos = br.item[k];
+					var pos = br.item[k];
 					try {
-						if (base) n = lib.node[pos][l];
-						if (get) {
-							if (l < lib.node[pos].length - 1) n = lib.node[pos][l];
-							else n = "#get_track#";
-						}
-						isTrack = p.show_tracks ? false : l < lib.node[pos].length - 2 ? false : true;
-						if (n == "#get_track#") {
+						if (base) {
 							n = lib.node[pos][l];
+							if (!n || n == "#!##!#") n = "?";
+						}
+						if (!p.s_txt && !base || p.s_txt) {
+							if (!folderView && l < lib.node[pos].length || folderView && l < lib.node[pos].length - 1) {
+								n = lib.node[pos][l];
+								if (!n || n == "#!##!#") n = "?";
+							} else n = "#get_track#";
+						}
+						isTrack = p.show_tracks ? false : !folderView && l < lib.node[pos].length - 1 || folderView && l < lib.node[pos].length - 2 ? false : true;
+						if (n == "#get_track#") {
+							n = !folderView ? tf.EvalWithMetadb(p.list.Item(pos)) : lib.node[pos][l];
 							isTrack = true;
 						}
 						nU = n.toUpperCase();
 						if (n_o != nU) {
 							n_o = nU;
-							n = n.replace(/~#!##!#|#!##!#/g, "?");
-							n = lib.prefixes(n);
-							srt = n;
-							n = n.replace(/#@#.*?#@#/g, "");
 							br.child[i] = {
 								name: n,
 								sel: false,
 								child: [],
 								track: isTrack,
-								item: [],
-								srt: srt
+								item: []
 							};
 							br.child[i].item.push(pos);
 							i++;
@@ -1915,8 +1405,6 @@ function populate() {
 					} catch (e) {}
 				}
 				break;
-			}
-			break;
 		}
 		this.buildTree(lib.root, 0, node, true, block);
 	}
@@ -1965,13 +1453,12 @@ function populate() {
 				nU = "";
 			for (i = 0; i < br_l; i++) {
 				if (br[i].name.indexOf("@@") != -1) {
-					multi = getAllCombinations(br[i].srt);
+					multi = getAllCombinations(br[i].name);
 					multi_rem.push(i);
 					for (var m = 0; m < multi.length; m++) multi_obj.push({
-						name: multi[m].join("").replace(/#@#.*?#@#/g, ""),
+						name: multi[m].join(""),
 						item: br[i].item.slice(),
-						track: br[i].track,
-						srt: multi[m].join("")
+						track: br[i].track
 					});
 				}
 			}
@@ -1988,8 +1475,7 @@ function populate() {
 					multi_cond[j] = {
 						name: n,
 						item: multi_obj[i].item.slice(),
-						track: multi_obj[i].track,
-						srt: multi_obj[i].srt
+						track: multi_obj[i].track
 					};
 					j++
 				} else multi_cond[j - 1].item.push.apply(multi_cond[j - 1].item, multi_obj[i].item.slice());
@@ -1998,7 +1484,6 @@ function populate() {
 			for (i = 0; i < br_l; i++) {
 				br[i].name = br[i].name.replace(/#!#/g, "");
 				nm_arr.push(br[i].name);
-				if (br[i].srt) br[i].srt = br[i].srt.replace(/#!#/g, "");
 			}
 			for (i = 0; i < multi_cond.length; i++) {
 				h = arr_index(nm_arr, multi_cond[i].name);
@@ -2012,8 +1497,7 @@ function populate() {
 				sel: false,
 				track: multi_cond[i].track,
 				child: [],
-				item: multi_cond[i].item.slice(),
-				srt: multi_cond[i].srt
+				item: multi_cond[i].item.slice()
 			});
 			if (!node || node && !full) br.sort(sort);
 			i = br.length;
@@ -2028,32 +1512,31 @@ function populate() {
 			par = this.tree.length - 1;
 		if (tr == 0) this.tree = [];
 		br_l = br.length;
-		if (p.show_counts == 2) var type = p.s_txt ? "search" : p.filter_by > 0 && p.s_show > 1 ? "filter" : "standard";
 		for (i = 0; i < br_l; i++) {
 			j = this.tree.length;
 			this.tree[j] = br[i];
 			this.tree[j].top = !i ? true : false;
 			this.tree[j].bot = i == br_l - 1 ? true : false;
 			if (tr == (p.base ? 1 : 0) && i == br_l - 1) this.line_l = j;
-			this.tree[j].ix = j;
 			this.tree[j].tr = tr;
 			this.tree[j].par = par;
-			if (p.show_counts == 2 && tr > 1) var pr = this.tree[par].par;
+			this.tree[j].ix = j;
 			switch (true) {
-			case l != -1 && !p.show_tracks:
-				for (var r = 0; r < this.tree[j].item.length; r++) {
-					if (lib.node[this.tree[j].item[r]].length == l + 1 || lib.node[this.tree[j].item[r]].length == l + 2) {
-						this.tree[j].track = true;
-						break;
+				case l != -1 && (p.cond || folderView) && !p.show_tracks:
+					for (var r = 0; r < this.tree[j].item.length; r++) {
+						if (lib.node[this.tree[j].item[r]].length == l + 1 || lib.node[this.tree[j].item[r]].length == l + 2) {
+							this.tree[j].track = true;
+							break;
+						}
 					}
-				}
-				break;
-			case l == 0 && lib.node[this.tree[j].item[0]].length == 1:
-				this.tree[j].track = true;
-				break;
+					break;
+				case l == 0 && lib.node[this.tree[j].item[0]].length == 1:
+					if (!folderView && p.show_tracks && p.unbranched) this.tree[j].track = true;
+					if (p.show_tracks && (p.cond || folderView)) this.tree[j].track = true;
+					if (!p.show_tracks) this.tree[j].track = true;
+					break;
 			}
-			this.tree[j].count = !this.tree[j].track || !p.show_tracks ? (p.show_counts == 1 ? " (" + this.tree[j].item.length + ")" : p.show_counts == 2 ? " (" + this.branchCounts(this.tree[j], !p.base || j ? false : true, true, false, tr + (tr > 2 ? this.tree[this.tree[pr].par].name : "") + (tr > 1 ? this.tree[pr].name : "") + (tr > 0 ? this.tree[par].name : "") + this.tree[j].name, type) + ")" : "") : "";
-			if (!p.show_tracks && this.tree[j].count == " (0)") this.tree[j].count = "";
+			this.tree[j].count = !this.tree[j].track || !p.show_tracks ? (p.show_counts == 1 ? "  (" + this.tree[j].item.length + ") " : p.show_counts == 2 ? "  (" + branchCounts(this.tree[j], !p.base || j ? false : true, true, false) + ") " : "") : "";
 			if (br[i].child.length > 0) this.buildTree(br[i].child, tr + 1, node, p.base && tr == 0 ? true : false);
 		}
 		if (!block) {
@@ -2063,9 +1546,8 @@ function populate() {
 		}
 	}
 
-	this.branchCounts = function(br, base, node, block, key, type) {
+	var branchCounts = function(br, base, node, block) {
 		if (!br) return;
-		if (this.subCounts[type][key]) return this.subCounts[type][key];
 		var b = [];
 		var br_l = br.item.length,
 			folderView = p.view_by == p.folder_view ? true : false,
@@ -2073,84 +1555,35 @@ function populate() {
 			l = base ? 0 : p.base ? br.tr : br.tr + 1,
 			n = "",
 			n_o = "#get_branch#",
-			nU = "",
-			pos = -1;
+			nU = "";
 		if (folderView) base = false;
 		if (base) node = false;
-		var get = !p.s_txt && !base || p.s_txt;
-		switch (p.multi_process) {
-		case false:
-			for (k = 0; k < br_l; k++) {
-				pos = br.item[k];
-				try {
-					if (base) n = lib.node[pos][l];
-					if (get) {
-						if (l < lib.node[pos].length - 1) n = lib.node[pos][l];
-						else n = "#get_track#";
-					}
-					if (n == "#get_track#") n = lib.node[pos][l];
-					nU = n.toUpperCase();
-					if (n_o != nU) {
-						n_o = nU;
-						b.push({
-							name: n
-						});
-					}
-				} catch (e) {}
-			}
-			break;
-		case true:
-			switch (p.multi_swap) {
-			case false:
-				for (k = 0; k < br_l; k++) {
-					pos = br.item[k];
-					try {
-						if (base) n = lib.node[pos][l];
-						if (get) {
-							if (l < lib.node[pos].length - 1) n = lib.node[pos][l];
-							else n = "#get_track#";
-						}
-						if (n == "#get_track#") n = lib.node[pos][l];
-						nU = n.toUpperCase();
-						if (n_o != nU) {
-							n_o = nU;
-							n = n.replace(/#!##!#/g, "?");
-							srt = n;
-							n = n.replace(/#@#.*?#@#/g, "");
-							b.push({
-								name: n,
-								srt: srt
-							});
-						}
-					} catch (e) {}
+		for (k = 0; k < br_l; k++) {
+			var pos = br.item[k];
+			try {
+				if (base) {
+					n = lib.node[pos][l];
+					if (!n || n == "#!##!#") n = "?";
 				}
-				break;
-			case true:
-				for (k = 0; k < br_l; k++) {
-					pos = br.item[k];
-					try {
-						if (base) n = lib.node[pos][l];
-						if (get) {
-							if (l < lib.node[pos].length - 1) n = lib.node[pos][l];
-							else n = "#get_track#";
-						}
-						if (n == "#get_track#") n = lib.node[pos][l];
-						nU = n.toUpperCase();
-						if (n_o != nU) {
-							n_o = nU;
-							n = n.replace(/~#!##!#|#!##!#/g, "?");
-							n = lib.prefixes(n);
-							srt = n;
-							n = n.replace(/#@#.*?#@#/g, "");
-							b.push({
-								name: n,
-								srt: srt
-							});
-						}
-					} catch (e) {}
+				if (!p.s_txt && !base || p.s_txt) {
+					if (l < lib.node[pos].length - 1) {
+						n = lib.node[pos][l];
+						if (!n || n == "#!##!#") n = "?";
+					} else n = "#get_track#";
 				}
-				break;
-			}
+				if (n == "#get_track#") {
+					n = lib.node[pos][l];
+				}
+				nU = n.toUpperCase();
+				if (n_o != nU) {
+					n_o = nU;
+					b.push({
+						name: n
+					});
+				}
+			} catch (e) {}
+		}
+		if (p.multi_process) {
 			var h = -1,
 				j = 0,
 				multi = [],
@@ -2164,11 +1597,10 @@ function populate() {
 			nU = "";
 			for (i = 0; i < br_l; i++) {
 				if (b[i].name.indexOf("@@") != -1) {
-					multi = getAllCombinations(b[i].srt);
+					multi = getAllCombinations(b[i].name);
 					multi_rem.push(i);
 					for (var m = 0; m < multi.length; m++) multi_obj.push({
-						name: multi[m].join("").replace(/#@#.*?#@#/g, ""),
-						srt: multi[m].join("")
+						name: multi[m].join("")
 					});
 				}
 			}
@@ -2183,8 +1615,7 @@ function populate() {
 				if (n_o != nU) {
 					n_o = nU;
 					multi_cond[j] = {
-						name: n,
-						srt: multi_obj[i].srt
+						name: n
 					};
 					j++
 				}
@@ -2194,18 +1625,12 @@ function populate() {
 				b[i].name = b[i].name.replace(/#!#/g, "");
 				nm_arr.push(b[i].name);
 			}
-			for (i = 0; i < br_l; i++) {
-				b[i].name = b[i].name.replace(/#!#/g, "");
-				nm_arr.push(b[i].name);
-				if (b[i].srt) b[i].srt = b[i].srt.replace(/#!#/g, "");
-			}
 			for (i = 0; i < multi_cond.length; i++) {
 				h = arr_index(nm_arr, multi_cond[i].name);
 				if (h != -1) multi_cond.splice(i, 1);
 			}
 			for (i = 0; i < multi_cond.length; i++) b.splice(i + 1, 0, {
-				name: multi_cond[i].name,
-				srt: multi_cond[i].srt
+				name: multi_cond[i].name
 			});
 			var full = p.base && br.tr == 0 ? true : false;
 			if (!node || node && !full) b.sort(sort);
@@ -2213,10 +1638,8 @@ function populate() {
 			while (i--) {
 				if (i != 0 && b[i].name.toUpperCase() == b[i - 1].name.toUpperCase()) b.splice(i, 1);
 			}
-			break;
 		}
-		this.subCounts[type][key] = b.length;
-		return b.length;
+		return b.length
 	}
 
 	this.create_images = function() {
@@ -2227,6 +1650,7 @@ function populate() {
 			sy_w = Math.max(Math.floor(sz / 6), 1),
 			x = 0,
 			y = 0;
+
 		for (var j = 0; j < 4; j++) {
 			nd[j] = gdi.CreateImage(sz, sz);
 			g = nd[j].GetGraphics();
@@ -2242,16 +1666,16 @@ function populate() {
 			nd[j].ReleaseGraphics(g);
 		}
 	}
-
+	
 	this.tracking = function(list, type) {
 		if (type) {
-			handles = fb.CreateHandleList();
+			this.handle_list = fb.CreateHandleList();
 			try {
-				for (var i = 0; i < list.length; i++) handles.Add(p.list.Item(list[i]));
+				for (var i = 0; i < list.length; i++) this.handle_list.Add(p.list.Item(list[i]));
 			} catch (e) {}
-		} else handles = list.Clone();
-		if (custom_sort.length) handles.OrderByFormat(tf_cs, 1);
-		selection_holder.SetSelection(handles);
+		} else this.handle_list = list.Clone();
+		if (custom_sort.length) this.handle_list.OrderByFormat(fb.TitleFormat(custom_sort), 1);
+		this.selection_holder.SetSelection(this.handle_list);
 	}
 
 	this.load = function(list, type, add, send, def_pl, insert) {
@@ -2265,15 +1689,16 @@ function populate() {
 			var items = fb.CreateHandleList();
 			for (i = 0; i < list.length; i++) items.Add(p.list.Item(list[i]));
 		} else var items = list.Clone();
-		if (p.multi_process && !custom_sort.length) items.OrderByFormat(p.mv_sort, 1);
-		if (custom_sort.length) items.OrderByFormat(tf_cs, 1);
-		handles = items.Clone();
-		selection_holder.SetSelection(handles);
+		if (p.multi_process && !custom_sort.length) items.OrderByFormat(fb.TitleFormat(p.mv_sort), 1);
+		if (custom_sort.length) items.OrderByFormat(fb.TitleFormat(custom_sort), 1);
+		this.handle_list = items.Clone();
+		this.selection_holder.SetSelection(this.handle_list);
 		if (fb.IsPlaying && !add && fb.GetNowPlaying()) {
-			for (i = 0; i < items.Count; i++) if (fb.GetNowPlaying().Compare(items.Item(i))) {
-				np_item = i;
-				break;
-			}
+			for (i = 0; i < items.Count; i++)
+				if (fb.GetNowPlaying().Compare(items.Item(i))) {
+					np_item = i;
+					break;
+				}
 			var pl_chk = true;
 			if (np_item != -1) {
 				var np = plman.GetPlayingItemLocation();
@@ -2341,19 +1766,20 @@ function populate() {
 			}
 		}
 		var nm = this.tree[ic].name.toUpperCase();
-		for (var h = 0; h < this.tree.length; h++) if (!p.base || this.tree[h].tr) this.tree[h].child = [];
+		for (var h = 0; h < this.tree.length; h++)
+			if (!p.base || this.tree[h].tr) this.tree[h].child = [];
 		this.buildTree(lib.root, 0);
 		scr_pos = false;
-		for (j = 0; j < this.tree.length; j++) if (this.tree[j].name.toUpperCase() == nm) {
-			sbar.check_scroll(j * ui.row_h);
-			scr_pos = true;
-			break
-		}
+		for (j = 0; j < this.tree.length; j++)
+			if (this.tree[j].name.toUpperCase() == nm) {
+				sbar.check_scroll(j * ui.row_h);
+				scr_pos = true;
+				break;
+			}
 		if (!scr_pos) {
 			sbar.reset();
 			p.tree_paint();
 		}
-		lib.treeState(false, lib.rememberTree);
 	}
 
 	this.expand = function(ie, nm) {
@@ -2364,28 +1790,31 @@ function populate() {
 			var j = 0,
 				par = 0,
 				parent = [];
-			for (h = 0; h < this.tree.length; h++) if (this.tree[h].sel) {
-				j = this.tree[h].tr;
-				if (p.base) j -= 1;
-				if (this.tree[h].tr != 0) {
-					par = this.tree[h].par, pr_pr = [];
-					for (m = 1; m < j + 1; m++) {
-						if (m == 1) pr_pr[m] = par;
-						else pr_pr[m] = this.tree[pr_pr[m - 1]].par;
-						parent.push(pr_pr[m]);
+			for (h = 0; h < this.tree.length; h++)
+				if (this.tree[h].sel) {
+					j = this.tree[h].tr;
+					if (p.base) j -= 1;
+					if (this.tree[h].tr != 0) {
+						par = this.tree[h].par, pr_pr = [];
+						for (m = 1; m < j + 1; m++) {
+							if (m == 1) pr_pr[m] = par;
+							else pr_pr[m] = this.tree[pr_pr[m - 1]].par;
+							parent.push(pr_pr[m]);
+						}
 					}
 				}
-			}
-			for (h = 0; h < this.tree.length; h++) if (!arr_contains(parent, h) && !this.tree[h].sel && (!p.base || this.tree[h].tr)) this.tree[h].child = [];
+			for (h = 0; h < this.tree.length; h++)
+				if (!arr_contains(parent, h) && !this.tree[h].sel && (!p.base || this.tree[h].tr)) this.tree[h].child = [];
 			this.buildTree(lib.root, 0);
 		}
 		var start_l = this.tree.length,
 			nodes = -1;
 		m = this.tree.length;
-		while (m--) if (this.tree[m].sel) {
-			this.expandNodes(this.tree[m], !p.base || m ? false : true);
-			nodes++
-		}
+		while (m--)
+			if (this.tree[m].sel) {
+				this.expandNodes(this.tree[m], !p.base || m ? false : true);
+				nodes++
+			}
 		this.clear();
 		if (p.base && this.tree.length == 1) this.line_l = 0;
 		sbar.set_rows(this.tree.length);
@@ -2404,7 +1833,6 @@ function populate() {
 			else sbar.check_scroll(Math.min(h * ui.row_h, (h + 1 - sbar.rows_drawn + new_items) * ui.row_h));
 		}
 		if (sbar.scroll > h * ui.row_h) sbar.check_scroll(h * ui.row_h);
-		lib.treeState(false, lib.rememberTree);
 	}
 
 	this.draw = function(gr) {
@@ -2434,7 +1862,7 @@ function populate() {
 					sel_w = Math.min(item_w + ui.sel * 2, sbar.tree_w - sel_x - 1);
 					if (p.full_line) sel_w = sbar.tree_w - sel_x;
 					if (!tt.Text || m_i != i && tt.Text) {
-						gr.FillSolidRect(sel_x, item_y, sel_w + 1, ui.row_h+ 1, ui.backcolsel);//选定背景
+						gr.FillSolidRect(sel_x, item_y, sel_w + 1, ui.row_h + 1, ui.backcolsel);//选定背景
 					}
 				}
 				if (ui.node_style && ui.linecol) {
@@ -2481,9 +1909,9 @@ function populate() {
 				item_y = Math.round(ui.row_h * i + p.s_h - sbar.delta);
 				nm = this.tree[i].name + this.tree[i].count;
 				item_x = Math.round(ui.pad * this.tree[i].tr + ui.margin);
-				item_w = gr.CalcTextWidth(nm, ui.font);
 				item_w_name = gr.CalcTextWidth(this.tree[i].name, ui.font);
-				if (tooltip && p.full_line) this.tree[i].tt_w = item_w;
+				item_w = gr.CalcTextWidth(nm, ui.font);
+				if (p.full_line) this.tree[i].tt_w = item_w;
 				if (ui.node_style) {
 					var y2 = ui.row_h * i + y1 + Math.floor(ui.node_sz / 2);
 					if (!this.tree[i].track) {
@@ -2527,7 +1955,7 @@ function populate() {
 		else if (v.k(0)) this.load(this.sel_items, true, false, false, this.gen_pl, false);
 		else this.load(item.item, true, false, false, this.gen_pl, false);
 	}
-
+	
 	this.track = function(item, x, y) {
 		if (!this.check_ix(item, x, y, false)) return;
 		if (v.k(1)) this.tracking(this.sel_items, true);
@@ -2536,8 +1964,6 @@ function populate() {
 	}
 
 	this.lbtn_dn = function(x, y) {
-		lbtn_dn = false;
-		sent = false;
 		if (y < p.s_h) return;
 		var ix = this.get_ix(x, y, true, false);
 		p.pos = ix;
@@ -2550,13 +1976,11 @@ function populate() {
 			switch (xp) {
 			case 0:
 				this.clear_child(item);
-				if (!ix && this.tree.length == 1) p.setHeight(false);
 				break;
 			case 1:
 				if (this.auto) this.branch_chg(item, false, true);
 				var row = this.row(y);
 				this.branch(item, !p.base || ix ? false : true, true);
-				if (!ix) p.setHeight(true);
 				if (this.auto) ix = item.ix
 				if (row + 1 + item.child.length > sbar.rows_drawn) {
 					if (item.child.length > (sbar.rows_drawn - 2)) sbar.check_scroll(ix * ui.row_h);
@@ -2568,62 +1992,23 @@ function populate() {
 			this.check_row(x, y);
 			break;
 		case 1:
-			last_pressed_coord.x = x;
-			last_pressed_coord.y = y;
-			lbtn_dn = true;
-			if (v.k(2) && this.autoFill) return;
-			if (!item.sel && !v.k(1)) this.get_selection(ix, item.sel);
+			if (v.k(2) && sgl_fill) return this.add(x, y, alt_lbtn_pl);
+			if (!v.k(1)) this.clear();
+			if (!item.sel) this.get_selection(ix, item.sel);
+			else if (v.k(1)) this.get_selection(ix, item.sel);
+			p.tree_paint();
 			break;
 		}
-		lib.treeState(false, lib.rememberTree);
-	}
-
-	this.lbtn_up = function(x, y) {
-		last_pressed_coord = {
-			x: undefined,
-			y: undefined
-		};
-		lbtn_dn = false;
-		if (y < p.s_h || sent || but.Dn) return;
-		var ix = this.get_ix(x, y, true, false);
-		p.pos = ix;
-		if (ix >= this.tree.length || ix < 0) return this.get_selection(-1);
-		var item = this.tree[ix],
-			mode = x < Math.round(ui.pad * item.tr) + ui.icon_w + ui.margin ? 0 : this.check_ix(item, x, y, false) ? 1 : 2,
-			xp = item.child.length > 0 ? 0 : 1;
-		if (mode != 1) return;
-		if (v.k(2) && this.autoFill) return this.add(x, y, alt_lbtn_pl);
-		if (!v.k(1)) {
-			this.clear();
-			if (!item.sel) this.get_selection(ix, item.sel);
-		} else this.get_selection(ix, item.sel);
-		p.tree_paint();
-		lib.treeState(false, lib.rememberTree);
-		if (this.autoFill) this.send(item, x, y);
+		if (sgl_fill) this.send(item, x, y);
 		else this.track(item, x, y);
 	}
 
-	this.dragDrop = function(x, y) {
-		if (!lbtn_dn) return;
-		if (Math.sqrt((Math.pow(last_pressed_coord.x - x, 2) + Math.pow(last_pressed_coord.y - y, 2))) > 7) {
-			last_pressed_coord = {
-				x: undefined,
-				y: undefined
-			}
-			var handle_list = this.getHandles();
-			var effect = fb.DoDragDrop(handle_list, handle_list.Count ? 0 | 1 : 0);
-			lbtn_dn = false;
-			handle_list.Dispose();
-		}
-	}
-
 	this.lbtn_dblclk = function(x, y) {
-		sent = true;
 		if (y < p.s_h) return;
 		var ix = this.get_ix(x, y, true, false);
 		if (ix >= this.tree.length || ix < 0) return;
 		var item = this.tree[ix];
-		if (!this.autoFill) this.send(item, x, y);
+		if (!sgl_fill) this.send(item, x, y);
 		if (!this.check_ix(item, x, y, false) || this.dbl_action == 2) return;
 		var mp = 1;
 		if (!this.dbl_action) {
@@ -2631,11 +2016,9 @@ function populate() {
 			switch (mp) {
 			case 0:
 				this.clear_child(item);
-				if (!ix && this.tree.length == 1) p.setHeight(false);
 				break;
 			case 1:
 				if (this.auto) this.branch_chg(item, false, true);
-				if (!ix) p.setHeight(true);
 				var row = this.row(y);
 				this.branch(item, !p.base || ix ? false : true, true);
 				if (this.auto) ix = item.ix
@@ -2646,12 +2029,9 @@ function populate() {
 				break;
 			}
 			if (sbar.scroll > ix * ui.row_h) sbar.check_scroll(ix * ui.row_h);
-			lib.treeState(false, lib.rememberTree);
 		}
 		if (this.dbl_action || !this.dbl_action && mp == 1 && !item.child.length) {
 			var pln = plID(lib_playlist);
-			if (!this.gen_pl) pln = plman.ActivePlaylist;
-			else plman.ActivePlaylist = pln;
 			plman.ActivePlaylist = pln;
 			var c = (plman.PlaybackOrder == 3 || plman.PlaybackOrder == 4) ? Math.ceil(plman.PlaylistItemCount(pln) * Math.random() - 1) : 0;
 			plman.ExecutePlaylistDefaultAction(pln, c);
@@ -2692,17 +2072,16 @@ function populate() {
 	}
 
 	this.move = function(x, y) {
-		if (but.Dn) return;
 		var ix = this.get_ix(x, y, false, false);
 		get_pos = this.check_row(x, y);
 		m_i = -1;
 		if (ix != -1) {
 			m_i = ix;
-			if (tooltip) this.activate_tooltip(ix, y);
+			this.activate_tooltip(ix, y);
 		}
 		if (m_i == ix_o && m_br == row_o) return;
 		tt_id = -1;
-		if (tooltip && tt.Text) this.deactivate_tooltip();
+		if (tt.Text) this.deactivate_tooltip();
 		if (!sbar.draw_timer) p.tree_paint();
 		ix_o = m_i;
 		row_o = m_br;
@@ -2710,7 +2089,7 @@ function populate() {
 
 	this.get_ix = function(x, y, simple, type) {
 		var ix;
-		if (y > p.s_h && y < p.s_h + p.sp) ix = this.row(y + sbar.delta);
+		if (y > p.s_h && y < p.s_h + p.sp) ix = this.row(y + sbar.scroll);
 		else ix = -1;
 		if (simple) return ix;
 		if (this.tree.length > ix && ix >= 0 && x < sbar.tree_w && y > p.s_h && y < p.s_h + p.sp && this.check_ix(this.tree[ix], x, y, type)) return ix;
@@ -2731,7 +2110,7 @@ function populate() {
 			p.pos = Math.max(Math.min(p.pos, this.tree.length - 1), 0);
 			get_pos = -1;
 			m_i = -1;
-			if ((this.tree[p.pos].tr == (p.base ? 1 : 0)) && this.tree[p.pos].child.length < 1) break;
+			if (this.tree[p.pos].tr == p.base ? 1 : 0) break;
 			if (this.tree[p.pos].child.length > 0) {
 				var item = this.tree[p.pos];
 				this.clear_child(item);
@@ -2748,10 +2127,9 @@ function populate() {
 				};
 			}
 			p.tree_paint();
-			if (this.autoFill) this.load(this.sel_items, true, false, false, this.gen_pl, false);
+			this.load(this.sel_items, true, false, false, this.gen_pl, false);
 			sbar.set_rows(this.tree.length);
 			if (sbar.scroll > p.pos * ui.row_h) sbar.check_scroll(p.pos * ui.row_h);
-			lib.treeState(false, lib.rememberTree);
 			break;
 		case v.right:
 			if (!(p.pos >= 0) && get_pos != -1) p.pos = get_pos
@@ -2765,14 +2143,13 @@ function populate() {
 			this.get_selection(item.ix);
 			p.tree_paint();
 			m_i = p.pos = item.ix;
-			if (this.autoFill) this.load(this.sel_items, true, false, false, this.gen_pl, false);
+			this.load(this.sel_items, true, false, false, this.gen_pl, false);
 			sbar.set_rows(this.tree.length);
 			var row = (p.pos * ui.row_h - sbar.scroll) / ui.row_h;
 			if (row + item.child.length > sbar.rows_drawn) {
 				if (item.child.length > (sbar.rows_drawn - 2)) sbar.check_scroll(p.pos * ui.row_h);
 				else sbar.check_scroll(Math.min(p.pos * ui.row_h, (p.pos + 1 - sbar.rows_drawn + item.child.length) * ui.row_h));
 			}
-			lib.treeState(false, lib.rememberTree);
 			break;
 		case v.pgUp:
 			if (this.tree.length == 0) break;
@@ -2781,8 +2158,7 @@ function populate() {
 			sbar.wheel(1, true);
 			this.get_selection(this.tree[p.pos].ix);
 			p.tree_paint();
-			if (this.autoFill) this.load(this.sel_items, true, false, false, this.gen_pl, false);
-			lib.treeState(false, lib.rememberTree);
+			this.load(this.sel_items, true, false, false, this.gen_pl, false);
 			break;
 		case v.pgDn:
 			if (this.tree.length == 0) break;
@@ -2792,8 +2168,7 @@ function populate() {
 			sbar.wheel(-1, true);
 			this.get_selection(this.tree[p.pos].ix);
 			p.tree_paint();
-			if (this.autoFill) this.load(this.sel_items, true, false, false, this.gen_pl, false);
-			lib.treeState(false, lib.rememberTree);
+			this.load(this.sel_items, true, false, false, this.gen_pl, false);
 			break;
 		case v.home:
 			if (this.tree.length == 0) break;
@@ -2801,8 +2176,7 @@ function populate() {
 			sbar.check_scroll(0);
 			this.get_selection(this.tree[p.pos].ix);
 			p.tree_paint();
-			if (this.autoFill) this.load(this.sel_items, true, false, false, this.gen_pl, false);
-			lib.treeState(false, lib.rememberTree);
+			this.load(this.sel_items, true, false, false, this.gen_pl, false);
 			break;
 		case v.end:
 			if (this.tree.length == 0) break;
@@ -2810,12 +2184,11 @@ function populate() {
 			sbar.check_scroll((this.tree.length) * ui.row_h);
 			this.get_selection(this.tree[p.pos].ix);
 			p.tree_paint();
-			if (this.autoFill) this.load(this.sel_items, true, false, false, this.gen_pl, false);
-			lib.treeState(false, lib.rememberTree);
+			this.load(this.sel_items, true, false, false, this.gen_pl, false);
 			break;
 		case v.enter:
 			if (!this.sel_items.length) return;
-			this.load(this.sel_items, true, false, true, this.gen_pl, false);
+			this.load(this.sel_items, true, false, false, this.gen_pl, false);
 			break;
 		case v.dn:
 		case v.up:
@@ -2837,31 +2210,8 @@ function populate() {
 			m_i = p.pos;
 			this.get_selection(p.pos);
 			p.tree_paint();
-			if (this.autoFill) this.load(this.sel_items, true, false, false, this.gen_pl, false);
-			lib.treeState(false, lib.rememberTree);
+			this.load(this.sel_items, true, false, false, this.gen_pl, false);
 			break;
-		}
-	}
-
-	this.on_main_menu = function(index) {
-		if (index == addIX) {
-			this.get_sel_items();
-			if (!this.sel_items.length) return;
-			this.load(this.sel_items, true, true, false, this.gen_pl, false);
-		}
-		if (index == collapseAllIX) {
-			this.collapseAll();
-		}
-		if (index == insertIX) {
-			this.get_sel_items();
-			if (!this.sel_items.length) return;
-			this.load(this.sel_items, true, true, false, this.gen_pl, true);
-		}
-		if (index == searchClearIX && p.s_show) {
-			sL.clear();
-		}
-		if (index == searchFocusIX && is_focused && p.s_show) {
-			sL.searchFocus();
 		}
 	}
 }
@@ -2871,7 +2221,6 @@ function on_size() {
 	ui.w = window.Width;
 	ui.h = window.Height;
 	if (!ui.w || !ui.h) return;
-	//ui.blurReset();
 	ui.get_font();
 	p.on_size();
 	pop.create_tooltip();
@@ -2910,7 +2259,7 @@ function searchLibrary() {
 	var drawsel = function(gr) {
 			if (s == f) return;
 			var clamp = p.s_x + p.s_w2;
-			gr.DrawLine(Math.min(p.s_x + get_cursor_x(s), clamp), p.s_sp / 2, Math.min(p.s_x + get_cursor_x(f), clamp), p.s_sp / 2, ui.row_h - 3, ui.ibeamcol2);
+			gr.DrawLine(Math.min(p.s_x + get_cursor_x(s), clamp), p.s_sp / 2, Math.min(p.s_x + get_cursor_x(f), clamp), p.s_sp / 2, ui.row_h - 3, ui.ibeamcol);
 		}
 	var get_cursor_pos = function(x) {
 			var im = gdi.CreateImage(1, 1),
@@ -2950,7 +2299,6 @@ function searchLibrary() {
 		}
 	this.clear = function() {
 		lib.time.Reset();
-		pop.subCounts.search = {};
 		offset = s = f = cx = 0;
 		p.s_cursor = false;
 		p.s_search = false;
@@ -2958,7 +2306,6 @@ function searchLibrary() {
 		p.search_paint();
 		timer.reset(timer.search_cursor, timer.search_cursori);
 		lib.rootNodes();
-		if (p.pn_h_auto && p.pn_h == p.pn_h_min && pop.tree[0]) pop.clear_child(pop.tree[0]);
 	}
 	this.on_key_up = function(vkey) {
 		if (!p.s_search) return;
@@ -2978,7 +2325,8 @@ function searchLibrary() {
 		calc_text();
 		if (t < s) {
 			if (t < f) {
-				if (t_x < p.s_x) if (offset > 0) offset--;
+				if (t_x < p.s_x)
+					if (offset > 0) offset--;
 			} else if (t > f) {
 				if (t_x + p.s_x > p.s_x + p.s_w2) {
 					var l = (txt_w > p.s_w2) ? txt_w - p.s_w2 : 0;
@@ -3026,20 +2374,6 @@ function searchLibrary() {
 		p.search_paint();
 	}
 
-	this.searchFocus = function() {
-		p.search_paint();
-		p.s_search = true;
-		shift = false;
-		s = f = cx = p.s_x;
-		timer.reset(timer.search_cursor, timer.search_cursori);
-		p.s_cursor = true;
-		timer.search_cursor = window.SetInterval(function() {
-			p.s_cursor = !p.s_cursor;
-			p.search_paint();
-		}, 530);
-		p.search_paint();
-	}
-
 	this.on_char = function(code, force) {
 		var text = String.fromCharCode(code);
 		if (force) p.s_search = true;
@@ -3050,6 +2384,7 @@ function searchLibrary() {
 		case v.enter:
 			if (p.s_txt.length < 3) break;
 			var items = fb.CreateHandleList();
+			//var items = p.items();
 			try {
 				items = fb.GetQueryItems(lib.list, p.s_txt)
 			} catch (e) {}
@@ -3163,7 +2498,6 @@ function searchLibrary() {
 			}
 			break;
 		}
-		if (code == v.copy || code == v.selAll) return;
 		if (!timer.search_cursor) timer.search_cursor = window.SetInterval(function() {
 			p.s_cursor = !p.s_cursor;
 			p.search_paint();
@@ -3173,10 +2507,7 @@ function searchLibrary() {
 		timer.reset(timer.search, timer.searchi);
 		timer.search = window.SetTimeout(function() {
 			lib.time.Reset();
-			pop.subCounts.search = {};
-			lib.treeState(false, lib.rememberTree);
 			lib.rootNodes();
-			p.setHeight(true);
 			if (sL.search_auto_expand) {
 				if (!pop.tree.length) return timer.search = false;
 				var count = 0,
@@ -3193,7 +2524,6 @@ function searchLibrary() {
 				if (p.base && pop.tree.length == 1) pop.line_l = 0;
 				sbar.set_rows(pop.tree.length);
 				p.tree_paint();
-				lib.treeState(false, lib.rememberTree);
 			}
 			timer.search = false;
 		}, 160);
@@ -3260,13 +2590,13 @@ function searchLibrary() {
 				f = (f < p.s_txt.length) ? f : p.s_txt.length;
 				drawsel(gr);
 				get_offset(gr);
-				gr.GdiDrawText(p.s_txt.substr(offset), ui.font, ui.searchcol, p.s_x, 0, p.s_w2, p.s_sp, p.l);
-			} else gr.GdiDrawText("搜索", ui.s_font, ui.txt_box, p.s_x, 0, p.s_w2, p.s_sp, p.l);
+				gr.GdiDrawText(p.s_txt.substr(offset), ui.font, ui.searchcol, p.s_x, 1, p.s_w2, p.s_sp, p.l);
+			} else gr.GdiDrawText("搜索", ui.s_font, ui.txt_box, p.s_x, 1, p.s_w2, p.s_sp, p.l);
 			drawcursor(gr);
 			if (p.s_show > 1) {
 				var l_x = p.f_x1 - 9,
 					l_h = Math.round(p.s_sp / 2);
-				gr.gdiDrawText(p.filt[p.filter_by].name, p.f_font, ui.txt_box, p.f_x1, 0, p.f_w[p.filter_by], p.s_sp, p.cc);
+				gr.gdiDrawText(p.filt[p.filter_by].name, p.f_font, ui.txt_box, p.f_x1, 1, p.f_w[p.filter_by], p.s_sp, p.cc);
 				gr.FillGradRect(l_x + 1, 0, 1, l_h, 90, RGBA(0, 0, 0, 3), ui.s_linecol);//搜索框右侧阴影线
 				gr.FillGradRect(l_x + 1, l_h, 1, l_h, 90, ui.s_linecol, RGBA(0, 0, 0, 3));
 			}
@@ -3292,7 +2622,6 @@ var j_Search = function() {
 		}
 
 		this.on_char = function(code) {
-			if (utils.IsKeyPressed(0x09) || utils.IsKeyPressed(0x11) || utils.IsKeyPressed(0x1B)) return;
 			var text = String.fromCharCode(code);
 			if (!p.s_search) {
 				var found = false,
@@ -3309,22 +2638,20 @@ var j_Search = function() {
 					jSearch += text;
 					break;
 				}
-				pop.clear();
+				var l = pop.tree.length;
+				for (i = 0; i < l; i++) pop.tree[i].sel = false;
 				if (!jSearch) return;
 				pop.sel_items = [];
 				jump_search = true;
 				window.RepaintRect(0, j_y - 1, ui.w, j_h + 3);
 				timer.reset(timer.jsearch, timer.jsearchi);
 				timer.jsearch = window.SetTimeout(function() {
-					for (i = 0; i < pop.tree.length; i++) {
+					for (i = 0; i < l; i++) {
 						if (pop.tree[i].name != p.baseName && pop.tree[i].name.substring(0, jSearch.length).toLowerCase() == jSearch.toLowerCase()) {
 							found = true;
 							pos = i;
 							pop.tree[i].sel = true;
-							p.pos = pos;
-							pop.setGetPos(pos);
-							if (pop.autoFill) pop.get_sel_items();
-							lib.treeState(false, lib.rememberTree);
+							pop.get_sel_items();
 							break;
 						}
 					}
@@ -3336,11 +2663,11 @@ var j_Search = function() {
 
 				timer.reset(timer.clear_jsearch, timer.clear_jsearchi);
 				timer.clear_jsearch = window.SetTimeout(function() {
-					if (found && pop.autoFill) pop.load(pop.sel_items, true, false, false, pop.gen_pl, false);
+					if (found) pop.load(pop.sel_items, true, false, false, pop.gen_pl, false);
 					jSearch = "";
-					window.RepaintRect(0, j_y, ui.w, j_h + 1);
+					window.RepaintRect(0, j_y - 1, ui.w, j_h + 3);
 					timer.clear_jsearch = false;
-				}, 1200);
+				}, 1000);
 			}
 		}
 
@@ -3363,12 +2690,17 @@ var jS = new j_Search();
 function on_paint(gr) {
 	if (!ui.w) return;
 	ui.draw(gr);
-	lib.checkTree();
+	if (lib.upd) {
+		lib.refresh();
+		lib.upd = false;
+		return;
+	}
 	if (p.s_show) sL.draw(gr);
 	pop.draw(gr);
 	if (ui.scrollbar_show) sbar.draw(gr);
 	if (p.s_show || ui.scrollbar_show) but.draw(gr);
 	jS.draw(gr);
+	
 	gr.DrawLine(0, 0, 0, ui.h, 1, RGBA(0, 0, 0, 80));
 	//gr.DrawLine(1, 0, 1, ui.h, 1, RGBA(0, 0, 0, 60));
 	//gr.DrawLine(2, 0, 2, ui.h, 1, RGBA(0, 0, 0, 30));
@@ -3388,29 +2720,26 @@ function on_paint(gr) {
 
 function button_manager() {
 	var icon_f_name = "Segoe UI",
-	icon_f_style = 0,
-	arrow_symb = 0;
+		icon_f_style = 0,
+		arrow_symb = 0;
 	
-	var b_x, b3 = ["scrollUp", "scrollDn"], but_tt = window.CreateTooltip(fbx_set[13], fbx_set[14], 0),
-		bx, by, bh, byDn, byUp, fw, hot_o, i, qx, qy, qh, s_img = [],
+	var b_x, but_tt = window.CreateTooltip(fbx_set[13], fbx_set[14], 0),
+		bx, by, bh, byDn, byUp, fw, i, qx, qy, qh, s_img = [],
 		scr = [],
 		scrollBut_x, scrollDn_y, scrollUp_y;
 	this.btns = [];
 	this.b = null;
-	this.Dn = false;
 	var browser = function(c) {
-			if (!but.run(c)) fb.ShowPopupMessage("无法启动默认浏览器。", "媒体库目录树");
-		}
+		if (!but.run(c)) fb.ShowPopupMessage("无法启动默认浏览器。", "媒体库目录树");
+	}
 	var tooltip = function(n) {
 			if (but_tt.text == n) return;
 			but_tt.text = n;
 			but_tt.activate();
-		}
+	}
 	this.lbtn_dn = function(x, y) {
-		this.move(x, y);
 		if (!this.b) return false;
-		this.Dn = this.b;
-		if (ui.scrollbar_show && ui.scrollbar_bt_show) for (j = 0; j < b3.length; j++) if (this.b == b3[j]) {
+		if (ui.scrollbar_show && ui.scrollbar_bt_show && (this.b == "scrollUp" || this.b == "scrollDn")) {
 			if (this.btns[this.b].trace(x, y)) this.btns[this.b].down = true;
 			this.btns[this.b].changestate("down");
 		}
@@ -3418,10 +2747,12 @@ function button_manager() {
 		return true;
 	}
 	this.lbtn_up = function(x, y) {
-		this.Dn = false;
-		if (ui.scrollbar_show && ui.scrollbar_bt_show) for (j = 0; j < b3.length; j++) this.btns[b3[j]].down = false;
 		if (!this.b) return false;
-		if (ui.scrollbar_show && ui.scrollbar_bt_show) for (j = 0; j < b3.length; j++) if (this.b == b3[j]) this.btns[this.b].changestate(this.btns[this.b].trace(x, y) ? "hover" : "normal");
+		if (ui.scrollbar_show && ui.scrollbar_bt_show) {
+			this.btns["scrollUp"].down = false;
+			this.btns["scrollDn"].down = false;
+			if (this.b == "scrollUp" || this.b == "scrollDn") this.btns[this.b].changestate(this.btns[this.b].trace(x, y) ? "hover" : "normal");
+		}
 		this.move(x, y);
 		if (!this.b) return false;
 		this.btns[this.b].lbtn_up(x, y);
@@ -3446,8 +2777,8 @@ function button_manager() {
 	}
 
 	this.create_images = function() {
-		var c, col = [ui.textcol & 0x44ffffff, ui.textcol & 0x99ffffff, ui.textcol],
-			g, sz = Math.max(Math.round(ui.but_h * 1.666667), 1);
+		var	c, col = [ui.textcol & 0x44ffffff, ui.textcol & 0x99ffffff, ui.textcol],
+			g, sz =  Math.max(Math.round(ui.but_h * 1.666667), 1);
 			sc = sz / 100;
 		for (var j = 0; j < 2; j++) {
 			c = j ? 0xe4ffffff : 0x99ffffff;
@@ -3464,7 +2795,7 @@ function button_manager() {
 			scr[j] = gdi.CreateImage(sz, sz);
 			g = scr[j].GetGraphics();
 			g.SetSmoothingMode(2);
-			arrow_symb == g.FillPolygon(ui.scroll_color, 1, [50 * sc, 2, 100 * sc, 88 * sc, 0, 88 * sc]);
+			arrow_symb == g.FillPolygon(ui.scroll_color, 1, [50 * sc, 2, 100 * sc, 88 * sc, 0, 88 * sc]) ;
 			g.SetSmoothingMode(0);
 			scr[j].ReleaseGraphics(g);
 		}
@@ -3482,43 +2813,33 @@ function button_manager() {
 			}
 		} catch (e) {}
 	}
+
 	this.move = function(x, y) {
-		if (sbar.timer_but) {
-			if ((this.btns["scrollUp"].down || this.btns["scrollDn"].down) && !this.btns["scrollUp"].trace(x, y) && !this.btns["scrollDn"].trace(x, y)) {
-				this.btns["scrollUp"].changestate("normal");
-				this.btns["scrollDn"].changestate("normal");
-				window.ClearTimeout(sbar.timer_but);
-				sbar.timer_but = false;
-				sbar.count = -1;
-			}
-		} else for (j = 0; j < b3.length; j++) if (this.b == b3[j] && this.btns[this.b].down) {
-			this.btns[this.b].changestate("down");
-			this.btns[this.b].l_dn();
-		}
+		if (this.b && this.btns[this.b].down == true) return;
 		var b = null,
 			hand = false;
 		for (i in this.btns) {
-			if ((p.s_show == 1 || p.s_show > 1 && !p.s_txt) && i == "s_img" && (!this.Dn || this.Dn == "s_img") && this.btns[i].trace(x, y)) {
+			if ((p.s_show == 1 || p.s_show > 1 && !p.s_txt) && i == "s_img" && this.btns[i].trace(x, y)) {
 				b = i;
 				hand = true;
 			}
-			if (p.s_show == 1 && i == "cross1" && (!this.Dn || this.Dn == "cross1") && this.btns[i].trace(x, y)) {
+			if (p.s_show == 1 && i == "cross1" && this.btns[i].trace(x, y)) {
 				b = i;
 				hand = true;
 			}
-			if (p.s_show > 1 && p.s_txt && i == "cross2" && (!this.Dn || this.Dn == "cross2") && this.btns[i].trace(x, y)) {
+			if (p.s_show > 1 && p.s_txt && i == "cross2" && this.btns[i].trace(x, y)) {
 				b = i;
 				hand = true;
 			}
-			if (p.s_show > 1 && i == "filter" && (!this.Dn || this.Dn == "filter") && this.btns[i].trace(x, y)) {
+			if (p.s_show > 1 && i == "filter" && this.btns[i].trace(x, y)) {
 				b = i;
 				hand = true;
 			}
-			if (ui.scrollbar_show && sbar.scrollable_lines > 0 && ui.scrollbar_bt_show) for (j = 0; j < b3.length; j++) if (i == b3[j] && (!this.Dn || this.Dn == b3[j]) && this.btns[i].trace(x, y)) b = i;
+			if (ui.scrollbar_show && sbar.scrollable_lines > 0 && ui.scrollbar_bt_show && (i == "scrollUp" || i == "scrollDn") && this.btns[i].trace(x, y)) b = i;
 		}
-		window.SetCursor(this.Dn && this.Dn != this.b ? 32512 : hand ? 32649 : y < p.s_h && p.s_show && x > qx + qh ? 32513 : 32512);
+		window.SetCursor(hand ? 32649 : y < p.s_h && p.s_show && x > qx + qh ? 32513 : 32512);
 		if (this.b == b) return this.b;
-		if (b && (!this.Dn || this.Dn == b)) this.btns[b].changestate("hover");
+		if (b) this.btns[b].changestate("hover");
 		if (this.b) this.btns[this.b].changestate("normal");
 		this.b = b;
 		if (!this.b) tooltip("");
@@ -3569,7 +2890,7 @@ function button_manager() {
 					this.img = this.img_normal;
 					break;
 				}
-				window.RepaintRect(this.x, this.y, this.w + 1, this.h + 1);
+				window.RepaintRect(this.x, this.y, this.w, this.h);
 			}
 			this.x = x;
 			this.y = y;
@@ -3597,20 +2918,19 @@ function button_manager() {
 			qy = (p.s_sp - ui.row_h * 0.6) / 2;
 			qh = ui.row_h * 0.6;
 			b_x -= 1;
-			hot_o = byUp - p.s_h;
 			scrollBut_x = (ui.but_h - ui.scr_but_w) / 2;
 			scrollUp_y = -ui.arrow_pad + byUp + (ui.but_h - 1 - ui.scr_but_w) / 2;
 			scrollDn_y = ui.arrow_pad + byDn + (ui.but_h - 1 - ui.scr_but_w) / 2;
 		}
 		if (ui.scrollbar_show && ui.scrollbar_bt_show) {
-			this.btns.scrollUp = new btn(b_x, byUp - hot_o, ui.but_h, ui.but_h + hot_o, 1, scrollBut_x, scrollUp_y, ui.scr_but_w, {
+			this.btns.scrollUp = new btn(b_x, byUp, ui.but_h, ui.but_h, 1, scrollBut_x, scrollUp_y, ui.scr_but_w, {
 				normal: scr[0],
 				hover: scr[1],
 				down: scr[2]
 			}, false, function() {
 				sbar.but(1);
 			}, "", "");
-			this.btns.scrollDn = new btn(b_x, byDn, ui.but_h, ui.but_h + hot_o, 2, scrollBut_x, scrollDn_y, ui.scr_but_w, {
+			this.btns.scrollDn = new btn(b_x, byDn, ui.but_h, ui.but_h, 2, scrollBut_x, scrollDn_y, ui.scr_but_w, {
 				normal: scr[0],
 				hover: scr[1],
 				down: scr[2]
@@ -3622,28 +2942,28 @@ function button_manager() {
 			this.btns.s_img = new btn(qx, qy, qh, qh, 3, "", "", "", {
 				normal: s_img[0],
 				hover: s_img[1]
-			}, false, "", function() {
-				browser("\"" + fb.ProfilePath + "Query Syntax Help.html");
+			}, false, function() {
+				browser("\"" + fb.FoobarPath + "Query Syntax Help.html");
 			}, "", "打开查询语法帮助");
 			this.btns.cross1 = new btn(bx, by, bh, bh, 4, "", "", "", {
 				normal: "150",
 				hover: "220"
 			}, false, "", function() {
 				sL.clear();
-			}, "清除搜索文本");
+			}, "");//清除搜索文本
 			this.btns.cross2 = new btn(qx - bh * 0.2, by, bh, bh, 4, "", "", "", {
 				normal: "200",
 				hover: "255"
 			}, false, "", function() {
 				sL.clear();
-			}, "清除搜索文本");
+			}, "");//清除搜索文本
 			this.btns.filter = new btn(p.f_x1 - 12, 0, fw, p.s_sp, 5, p.f_but_ft, "▼", "", {
 				normal: ui.txt_box & 0x99ffffff,
 				hover: ui.txt_box & 0xe4ffffff
 			}, false, "", function() {
 				men.button(p.f_x1, p.s_h);
 				but.refresh(true)
-			}, "");
+			}, "");//过滤
 		}
 	}
 }
@@ -3694,7 +3014,7 @@ function menu_object() {
 			n = ["发送到当前列表", "插入到当前列表", "添加到当前列表", "折叠全部", "展开"];
 		for (i = 0; i < 5; i++) {
 			this.NewMenuItem(Index, "Playlist", i + 1);
-			Menu.AppendMenuItem(i < 3 && !plman.IsPlaylistLocked(plman.ActivePlaylist) || i == 3 || i == 4 && xp ? MF_STRING : MF_GRAYED, Index, n[i]);
+			Menu.AppendMenuItem(i != 4 || xp ? MF_STRING : MF_GRAYED, Index, n[i]);
 			if (i == 2) Menu.AppendMenuItem(MF_SEPARATOR, 0, 0);
 			Index++;
 		}
@@ -3720,26 +3040,24 @@ function menu_object() {
 		idx = menu.TrackPopupMenu(x, y);
 		if (idx >= 1 && idx <= Index) {
 			i = MenuMap[idx].value;
-			pop.subCounts.filter = {};
-			pop.subCounts.search = {};
 			switch (i) {
 			case p.f_menu.length + 1:
 				p.reset = !p.reset;
 				if (p.reset) {
 					p.search_paint();
-					lib.treeState(true, 2);
+					lib.refresh(true);
 				}
-				window.SetProperty("SYSTEM.Reset Tree", p.reset);
+				window.SetProperty("SYSTEM.Reset Tree", p.bypass);
 				break;
 			default:
 				p.filter_by = i - 1;
+				p.set_statistics_mode();
 				p.calc_text();
 				p.search_paint();
-				lib.treeState(true, 2);
+				lib.refresh(true);
 				window.SetProperty("SYSTEM.Filter By", p.filter_by);
 				break;
 			}
-			if (p.pn_h_auto && p.pn_h == p.pn_h_min && pop.tree[0]) pop.clear_child(pop.tree[0]);
 		}
 		menu.Dispose();
 	}
@@ -3791,30 +3109,30 @@ function menu_object() {
 			DClickMenu = window.CreatePopupMenu(),
 			PlaylistMenu = window.CreatePopupMenu(),
 			show_context = false;
-		var ix = pop.get_ix(x, y, true, false),
+		var ie = pop.get_ix(x, y, true, false),
+			ix = pop.row(y + sbar.delta),
 			item = pop.tree[ix],
 			nm = "",
 			row = -1;
 		xp = false;
-		if (y < p.s_h + p.sp && pop.tree.length > ix && ix != -1 && (x < Math.round(ui.pad * item.tr) + ui.icon_w + ui.margin && (!item.track || p.base && item.tr == 0) || pop.check_ix(item, x, y, true))) {
-			if (!item.sel) {
-				pop.clear();
-				item.sel = true;
-			}
-			pop.get_sel_items();
-			xp = pop.tree[ix].item.length > expand_limit || pop.tree[ix].track ? false : true;
-			if (xp && pop.tree.length) {
-				var count = 0,
-					m = 0;
-				for (m = 0; m < pop.tree.length; m++) if (m == ix || pop.tree[m].sel) {
-					if (row == -1 || m < row) {
-						row = m;
-						nm = (pop.tree[m].tr ? pop.tree[pop.tree[m].par].name : "") + pop.tree[m].name;
-						nm = nm.toUpperCase();
-					}
-					count += pop.tree[m].item.length;
-					xp = count <= expand_limit;
+		if (ie < pop.tree.length && ie != -1) xp = pop.tree[ie].item.length > expand_limit || pop.tree[ie].track ? false : true;
+		if (xp && pop.tree.length) {
+			var count = 0,
+				m = 0;
+			for (m = 0; m < pop.tree.length; m++) if (m == ie || pop.tree[m].sel) {
+				if (row == -1 || m < row) {
+					row = m;
+					nm = (pop.tree[m].tr ? pop.tree[pop.tree[m].par].name : "") + pop.tree[m].name;
+					nm = nm.toUpperCase();
 				}
+				count += pop.tree[m].item.length;
+				xp = count <= expand_limit;
+			}
+		}
+		if (y < p.s_h + p.sp && pop.tree.length > ix && ix >= 0 && (x < Math.round(ui.pad * item.tr) + ui.icon_w + ui.margin && (!item.track || p.base && item.tr == 0) || pop.check_ix(item, x, y, true))) {
+			if (!item.sel) {
+				new_sel = true;
+				pop.get_selection(ix, "", true, true);
 			}
 			Index = this.PlaylistTypeMenu(menu, Index);
 			menu.AppendMenuSeparator();
@@ -3849,7 +3167,10 @@ function menu_object() {
 			OptionsMenu.AppendTo(menu, MF_STRING, "选项");
 			Index = this.ConfigTypeMenu(OptionsMenu, Index);
 			menu.AppendMenuSeparator();
-			var items = pop.getHandles();
+			var items = fb.CreateHandleList();
+			try {
+				for (var l = 0; l < pop.sel_items.length; l++) items.Add(p.list.Item(pop.sel_items[l]));
+			} catch (e) {}
 			Context.InitContext(items);
 			Context.BuildMenu(menu, 5000, -1);
 		} else {
@@ -3857,7 +3178,6 @@ function menu_object() {
 			menu.AppendMenuSeparator();
 			Index = this.OptionsTypeMenu(menu, Index);
 			Index = this.ConfigTypeMenu(menu, Index);
-
 		}
 		menu.AppendMenuSeparator();
 		menu.AppendMenuItem(MF_STRING, 5900, "切换到简单播放列表");
@@ -3868,19 +3188,23 @@ function menu_object() {
 			case "Playlist":
 				switch (i) {
 				case 1:
+					if (new_sel) pop.clear();
+					item.sel = true;
+					pop.get_sel_items();
 					pop.load(pop.sel_items, true, false, true, false, false);
 					p.tree_paint();
-					lib.treeState(false, lib.rememberTree);
 					break;
 				case 4:
 					pop.collapseAll();
 					break;
 				case 5:
-					pop.expand(ix, nm);
+					pop.expand(ie, nm);
 					break;
 				default:
+					if (new_sel) pop.clear();
+					item.sel = true;
+					pop.get_sel_items();
 					pop.load(pop.sel_items, true, true, false, false, i == 2 ? true : false);
-					lib.treeState(false, lib.rememberTree);
 					break;
 				}
 				break;
@@ -3888,11 +3212,6 @@ function menu_object() {
 				lib.time.Reset();
 				if (p.s_txt) lib.upd_search = true;
 				p.fields(i < p.grp.length + 1 ? i - 1 : p.view_by, i - 1 < p.grp.length ? p.filter_by : i - 1 - p.grp.length);
-				pop.subCounts = {
-					"standard": {},
-					"search": {},
-					"filter": {}
-				};
 				lib.get_library();
 				lib.rootNodes();
 				if (p.pn_h_auto && p.pn_h == p.pn_h_min && pop.tree[0]) pop.clear_child(pop.tree[0]);
@@ -3903,7 +3222,7 @@ function menu_object() {
 					window.ShowProperties();
 					break;
 				case 2:
-					if (p.syncType) lib.treeState(false, 2);
+					lib.update();
 					break;
 				}
 				break;
@@ -3933,7 +3252,7 @@ function menu_object() {
 				break;
 			case 5804:
 				pop.autoplay = !pop.autoplay;
-				window.SetProperty(" Playlist: Play On Enter Or Send From Menu", pop.autoplay);
+				window.SetProperty(" Playlist: Play On Send From Menu", pop.autoplay);
 				break;
 			case 5805:
 				p.show_counts = 0;
@@ -3970,7 +3289,6 @@ function menu_object() {
 				break;
 			}
 		}
-		if (items) items.Dispose();
 		this.r_up = false;
 		Context.Dispose();
 		FilterMenu.Dispose();
@@ -3985,7 +3303,7 @@ function menu_object() {
 var men = new menu_object();
 
 function timers() {
-	var timer_arr = ["clear_jsearch", "focus", "jsearch", "search", "search_cursor", "tt", "update"];
+	var timer_arr = ["clear_jsearch", "jsearch", "search", "search_cursor", "tt", "update"];
 	for (var i = 0; i < timer_arr.length; i++) {
 		this[timer_arr[i]] = false;
 		this[timer_arr[i] + "i"] = i;
@@ -3996,9 +3314,9 @@ function timers() {
 	}
 	this.lib = function() {
 		window.SetTimeout(function() {
-			if ((ui.w < 1 || !window.IsVisible) && lib.rememberTree) lib.init = true;
+			if (ui.w < 1 || !window.IsVisible) lib.upd = true;
 			lib.get_library();
-			lib.rootNodes(lib.rememberTree ? 1 : 0, lib.process);
+			lib.rootNodes();
 		}, 5);
 	}
 	this.tooltip = function() {
@@ -4011,13 +3329,7 @@ function timers() {
 	this.lib_update = function() {
 		this.reset(this.update, this.updatei);
 		this.update = window.SetTimeout(function() {
-			lib.time.Reset();
-			pop.subCounts = {
-				"standard": {},
-				"search": {},
-				"filter": {}
-			};
-			lib.rootNodes(2, lib.process);
+			lib.update();
 			timer.update = false;
 		}, 500);
 	}
@@ -4026,35 +3338,13 @@ var timer = new timers();
 timer.lib();
 
 function on_char(code) {
-	pop.on_char(code);
-	jS.on_char(code);
 	if (!p.s_show) return;
 	sL.on_char(code);
+	jS.on_char(code)
 }
 
 function on_focus(is_focused) {
-	if (!is_focused) {
-		timer.reset(timer.search_cursor, timer.search_cursori);
-		p.s_cursor = false;
-		p.search_paint();
-	}
-	pop.on_focus(is_focused);
-}
-
-function on_get_album_art_done(handle, art_id, image, image_path) {
-	ui.get_album_art_done(image, image_path);
-}
-
-function on_metadb_changed() {
-	if (ui.block()) return;
-}
-
-function on_item_focus_change() {
-	if (fb.IsPlaying) return;
-	if (ui.block()) ui.get = true;
-	else {
-		ui.get = false;
-	}
+	if (is_focused && pop.handle_list && pop.handle_list.Count) pop.selection_holder.SetSelection(pop.handle_list);
 }
 
 function on_key_down(vkey) {
@@ -4068,23 +3358,18 @@ function on_key_up(vkey) {
 	sL.on_key_up(vkey)
 }
 
-function on_library_items_added(handle_list) {
-	if (p.syncType) return;
-	lib.treeState(false, 2, handle_list, 0);
-}
-
-function on_library_items_removed(handle_list) {
-	if (p.syncType) return;
-	lib.treeState(false, 2, handle_list, 2);
-}
-
-function on_library_items_changed(handle_list) {
-	if (p.syncType) return;
-	lib.treeState(false, 2, handle_list, 1);
-}
-
-function on_main_menu(index) {
-	pop.on_main_menu(index);
+function on_library_changed(origin) {
+	switch (origin) {
+	case 0:
+	case 1:
+		if (p.syncType) return;
+		timer.lib_update();
+		break;
+	case 2:
+		if (p.syncType || !p.statistics && fb.PlaybackTime > 59 && fb.PlaybackTime < 65) return;
+		timer.lib_update();
+		break;
+	}
 }
 
 function on_mouse_lbtn_dblclk(x, y) {
@@ -4100,7 +3385,6 @@ function on_mouse_lbtn_down(x, y) {
 }
 
 function on_mouse_lbtn_up(x, y) {
-	pop.lbtn_up(x, y);
 	if (p.s_show) {
 		sL.lbtn_up();
 		but.lbtn_up(x, y);
@@ -4126,7 +3410,6 @@ function on_mouse_move(x, y) {
 	if (p.s_show || ui.scrollbar_show) but.move(x, y);
 	if (p.s_show) sL.move(x, y);
 	pop.move(x, y);
-	pop.dragDrop(x, y);
 	sbar.move(x, y);
 	p.m_x = x;
 	p.m_y = y;
@@ -4144,6 +3427,8 @@ function on_mouse_rbtn_up(x, y) {
 
 function on_mouse_wheel(step) {
 	sbar.wheel(step, false);
+	//if (!v.k(3)) sbar.wheel(step, false);
+	//else ui.wheel(step);
 }
 
 function on_notify_data(name, info) {
@@ -4190,23 +3475,6 @@ function on_notify_data(name, info) {
 	}
 }
 
-function on_playback_stop(reason) {
-	if (reason == 2) return;
-	on_item_focus_change();
-}
-
-function on_playlist_items_added() {
-	on_item_focus_change();
-}
-
-function on_playlist_items_removed() {
-	on_item_focus_change();
-}
-
-function on_playlist_switch() {
-	on_item_focus_change();
-}
-
 function on_script_unload() {
 	but.on_script_unload();
 }
@@ -4239,5 +3507,5 @@ function StringFormat() {
 	return (h_align << 28 | v_align << 24 | trimming << 20 | flags);
 }
 
-//if (!window.GetProperty("SYSTEM.Software Notice Checked", false)) fb.ShowPopupMessage("THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.", "Library Tree");
+//if (!window.GetProperty("SYSTEM.Software Notice Checked", false)) fb.ShowPopupMessage("媒体库目录树\n\n(啊哦~翻译不动了...)\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.");
 //window.SetProperty("SYSTEM.Software Notice Checked", true);

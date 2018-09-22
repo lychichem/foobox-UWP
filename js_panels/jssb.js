@@ -3624,8 +3624,8 @@ function on_playback_new_track(metadb) {
 
 function on_playback_starting(cmd, is_paused) {};
 
-//=================================================// Library Callbacks
-
+//================// Library Callbacks
+/*
 function on_library_items_added() {
 	brw.populate(is_first_populate = false);
 };
@@ -3637,8 +3637,8 @@ function on_library_items_removed() {
 function on_library_items_changed() {
 	brw.populate(is_first_populate = false);
 };
-
-//=================================================// Playlist Callbacks
+*/
+//================// Playlist Callbacks
 
 function on_playlists_changed() {
 	//g_avoid_on_playlist_switch = true;

@@ -62,7 +62,8 @@ oDlItem = function(index, http_path, filename, file_title, file_artist, file_ext
 		title_w = Math.min(title_w, toolbar.width - 2*toolbar.dl_pctw-g_z16);
 		var art_w = toolbar.width - 2*toolbar.dl_pctw-g_z16-title_w;
 		gr.FillSolidRect(toolbar.x, item_y, toolbar.width, toolbar.dl_rowh, g_color_dl_bg);
-		gr.gdiDrawText(this.downloaded + "%", g_font, g_color_dl_txt_perc, toolbar.x+g_z6, item_y, toolbar.dl_pctw, toolbar.dl_rowh, lcs_txt);
+		var per_down = (this.downloaded == 999) ? "err" : this.downloaded + "%";
+		gr.gdiDrawText(per_down, g_font, g_color_dl_txt_perc, toolbar.x+g_z6, item_y, toolbar.dl_pctw, toolbar.dl_rowh, lcs_txt);
 		gr.gdiDrawText(this.file_title, g_font, g_color_dl_txt, toolbar.dl_titlex, item_y, title_w, toolbar.dl_rowh, lcs_txt);
 		if(art_w>40*zdpi) gr.gdiDrawText("  |  " + this.file_artist, g_font_2, g_color_dl_txt_art, toolbar.dl_titlex+title_w, item_y, art_w, toolbar.dl_rowh, lcs_txt);
 		gr.gdiDrawText(this.file_ext.toUpperCase(), g_font, g_color_dl_txt_ext, toolbar.x+toolbar.width-toolbar.dl_pctw-g_z6, item_y, toolbar.dl_pctw, toolbar.dl_rowh, ccs_txt);
@@ -2657,7 +2658,7 @@ oList = function(object_name, playlist) {
 					var file_ext = fb.Titleformat("$ext(%filename_ext%)").EvalWithMetadb(this.metadblist_selection.item(i));
 					if (dl_rename_by != "" || dl_rename_by != null){
 						try{
-							file_rename = fb.Titleformat(dl_rename_by + "." + file_ext).EvalWithMetadb(this.metadblist_selection.item(i));
+							file_rename = fb.Titleformat(dl_rename_by).EvalWithMetadb(this.metadblist_selection.item(i)).replace(/(\\|:|\*|\?|"|<|>|\/|\|)/g, "") + "." + file_ext;
 						} catch(e) {
 							file_rename = fb.Titleformat("%filename_ext%").EvalWithMetadb(this.metadblist_selection.item(i));
 						}
@@ -2670,8 +2671,12 @@ oList = function(object_name, playlist) {
 						var index_tmp = this.dlitems.length;
 						this.dlitems.push(new oDlItem(index_tmp, obj_file, file_rename, file_title, file_artist, file_ext));
 						if(index_tmp < 5) {
-							client.RunAsync(index_tmp, obj_file, file_rename);
-							p.list.dl_num += 1;
+							try{
+								client.RunAsync(index_tmp, obj_file, file_rename);
+								p.list.dl_num += 1;
+							} catch(e){
+								this.dlitems[index_tmp].downloaded = 999;
+							}
 						}
 					}
 				};
@@ -2693,8 +2698,12 @@ oList = function(object_name, playlist) {
 									last_id = Math.min(5, p.list.dlitems.length);
 									for (var i = 0; i < last_id; i++){
 										p.list.dlitems[i].index = i;
-										client.RunAsync(i, p.list.dlitems[i].http_path, p.list.dlitems[i].filename);
-										p.list.dl_num += 1;
+										try{
+											client.RunAsync(i, p.list.dlitems[i].http_path, p.list.dlitems[i].filename);
+											p.list.dl_num += 1;
+										}catch(e){
+											this.dlitems[i].downloaded = 999;
+										}
 									}
 								}else{
 									var timer_exit = window.SetTimeout(function() {
