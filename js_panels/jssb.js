@@ -25,8 +25,8 @@ var DLQueue = [];
 var DL_metadb = null;
 if (!("FormatDuration" in utils)) fb.ShowPopupMessage("This script requires the component JScript Panel v1.0.0 or higher.\n\nhttps://github.com/19379/foo-jscript-panel/releases");
 var _TFsorting = [];
-_TFsorting[0] = "%album artist% | $if(%album%,%date%,'9999') | %album% | %discnumber% | %tracknumber% | %title%";
-_TFsorting[1] = "%album% | %album artist% | %discnumber% | %tracknumber% | %title%";
+_TFsorting[0] = "%album% | %album artist% | %discnumber% | %tracknumber% | %title%";
+_TFsorting[1] = "%album artist% | $if(%album%,%date%,'9999') | %album% | %discnumber% | %tracknumber% | %title%";
 _TFsorting[2] = "%artist% | $if(%album%,%date%,'9999') | %album% | %discnumber% | %tracknumber% | %title%";
 _TFsorting[3] = "%genre% | %album artist% | $if(%album%,%date%,'9999') | %album% | %discnumber% | %tracknumber% | %title%";
 _TFsorting[4] = "$directory_path(%path%) | %album artist% | $if(%album%,%date%,'9999') | %album% | %discnumber% | %tracknumber% | %title%";
@@ -4151,7 +4151,7 @@ function transfer_covertype(){
 function find_sorting(){
 	switch (ppt.tagMode){
 		case 1:
-			return _TFsorting[0 + ppt.albumMode];
+			return _TFsorting[1 - ppt.albumMode];
 			break;
 		case 2:
 			return _TFsorting[1 + ppt.artistMode];

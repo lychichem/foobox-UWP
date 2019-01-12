@@ -830,7 +830,7 @@ function settings_textboxes_action(pageId, elementId) {
 		case 7:
 			var prefolder = dl_prefix_folder;
 			var new_prefolder = p.settings.pages[pageId].elements[elementId].inputbox.text;
-			if (new_prefolder == "") new_prefolder = prefolder;
+			if (new_prefolder == "" || !fso.FolderExists(new_prefolder)) new_prefolder = prefolder;
 			if (new_prefolder){
 				dl_prefix_folder = new_prefolder;
 				window.SetProperty("DOWNLOAD: prefix output folder", dl_prefix_folder);
@@ -1005,7 +1005,7 @@ function settings_textboxes_action(pageId, elementId) {
 			var _dir = album_cover_dir;
 			var new_dir = p.settings.pages[pageId].elements[elementId].inputbox.text;
 			if (new_dir == "") new_dir = _dir;
-			if (new_dir != "%path%" && !fso.FolderExists(new_dir)) new_dir = "B:\\MusicArt\\Album";
+			if (new_dir != "%path%" && !fso.FolderExists(new_dir)) new_dir = _dir;
 			if (new_dir){
 				album_cover_dir = new_dir;
 			}
@@ -1015,7 +1015,7 @@ function settings_textboxes_action(pageId, elementId) {
 			var _dir = artist_cover_dir;
 			var new_dir = p.settings.pages[pageId].elements[elementId].inputbox.text;
 			if (new_dir == "") new_dir = _dir;
-			if (new_dir != "%path%" && !fso.FolderExists(new_dir)) new_dir = "B:\\MusicArt\\Artist";
+			if (new_dir != "%path%" && !fso.FolderExists(new_dir)) new_dir = _dir;
 			if (new_dir){
 				artist_cover_dir = new_dir;
 			}
@@ -1025,7 +1025,7 @@ function settings_textboxes_action(pageId, elementId) {
 			var _dir = genre_cover_dir;
 			var new_dir = p.settings.pages[pageId].elements[elementId].inputbox.text;
 			if (new_dir == "") new_dir = _dir;
-			if (!fso.FolderExists(new_dir)) new_dir = "B:\\MusicArt\\Genre";
+			if (!fso.FolderExists(new_dir)) new_dir = _dir;
 			if (new_dir){
 				genre_cover_dir = new_dir;
 			}
@@ -1892,7 +1892,7 @@ oPage = function(id, objectName, label, nbrows) {
 			// Tagging options
 			this.elements.push(new oCheckBox(5, 20, cSettings.topBarHeight + rh * 9.25, "顺序播放时自动播放下一个播放列表 (遇到空列表停止)", "repeat_pls", "settings_checkboxes_action", this.id));
 			this.elements.push(new oCheckBox(6, txtbox_x + 30, cSettings.topBarHeight + rh * 11.25, "跳过已存在的文件", "dl_skip", "settings_checkboxes_action", this.id));
-			this.elements.push(new oTextBox(7, txtbox_x + 30, Math.ceil(cSettings.topBarHeight + rh * 12.25), oTextBox_4, cHeaderBar.height, "预设下载目录", dl_prefix_folder, "settings_textboxes_action", this.id));
+			this.elements.push(new oTextBox(7, txtbox_x + 30, Math.ceil(cSettings.topBarHeight + rh * 12.25), oTextBox_4, cHeaderBar.height, "预设下载目录，自定义时请确保该路径有效（需提前创建），否则更改将无效", dl_prefix_folder, "settings_textboxes_action", this.id));
 			this.elements.push(new oTextBox(8, txtbox_x + 30, Math.ceil(cSettings.topBarHeight + rh * 14.25), oTextBox_4, cHeaderBar.height, "下载的音频命名格式", dl_rename_by, "settings_textboxes_action", this.id));
 			break;
 		case 1:
@@ -2146,7 +2146,7 @@ oPage = function(id, objectName, label, nbrows) {
 			break;
 		case 4:
 			gr.gdiDrawText("封面储存路径", g_font_b, p.settings.color2, txtbox_x, cSettings.topBarHeight + rh * 1.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
-			gr.gdiDrawText("自定义路径时请确保该路径有效（需提前创建），路径无效则会自动转为默认路径", p.settings.font, p.settings.color2, txtbox_x + 30, cSettings.topBarHeight + rh * 2.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
+			gr.gdiDrawText("自定义时请确保该路径有效（需提前创建），否则更改将无效", p.settings.font, p.settings.color2, txtbox_x + 30, cSettings.topBarHeight + rh * 2.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
 			gr.gdiDrawText("如果需要定义为与音频所在目录相同，请填写为 %path%", p.settings.font, p.settings.color2, txtbox_x + 30, cSettings.topBarHeight + rh * 3.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
 			gr.gdiDrawText("注意：", g_font_b, p.settings.color1, txtbox_x, cSettings.topBarHeight + rh * 12.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
 			gr.gdiDrawText("1. 此处设定仅用于下载和缓存，不能替代foobar2000封面读取路径的设置 “参数选项--显示--专辑封面”", p.settings.font, p.settings.color2, txtbox_x, cSettings.topBarHeight + rh * 13.5 - (this.offset * cSettings.rowHeight), txt_width, p.settings.lineHeight, lc_txt);
@@ -2381,7 +2381,7 @@ oPage = function(id, objectName, label, nbrows) {
 		case "up":
 			if (state == ButtonStates.hover) {
 				// action
-				fb.RunMainMenuCommand("File/Preferences");
+				fb.RunMainMenuCommand("文件/参数选项");
 			};
 			break;
 		};

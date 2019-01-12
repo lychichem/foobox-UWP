@@ -1072,7 +1072,7 @@ oBrowser = function(name) {
 			fb.RunMainMenuCommand("File/Load playlist...");
 			break;
 		case (idx == 13):
-			fb.RunMainMenuCommand("文件/保存所有播放列表...");
+			fb.RunMainMenuCommand("文件/保存所有播放列表");
 			break;
 		case (idx == 3):
 			// set rename it

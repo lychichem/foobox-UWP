@@ -23,7 +23,7 @@ var btn_fullscr = fbx_set[27];
 var show_shadow = fbx_set[28];
 var sys_scrollbar = fbx_set[29];
 // GLOBALS
-var g_script_version = "6.1.4";
+var g_script_version = "6.1.4.1beta";
 var g_middle_clicked = false;
 var g_middle_click_timer = false;
 var g_queue_origin = -1;
@@ -109,7 +109,7 @@ var star_arr = new Array(1*zdpi, 5.5*zdpi, 4.05*zdpi, 8.8*zdpi, 3.5*zdpi, 13*zdp
 var tf_path = fb.TitleFormat("$left(%_path_raw%,4)");
 var g_path, g_track_type;
 var repeat_pls = window.GetProperty("PLAYBACK: Repeat playlists", false);
-var dl_prefix_folder = window.GetProperty("DOWNLOAD: prefix output folder", "B:\\cache\\Download");
+var dl_prefix_folder = window.GetProperty("DOWNLOAD: prefix output folder", "B:\\Download");
 var dl_skip = window.GetProperty("DOWNLOAD: auto skip", true);
 var dl_rename_by = window.GetProperty("DOWNLOAD: auto rename by", "%album artist% - %title%");
 var tf_length_seconds = fb.TitleFormat("%length_seconds_fp%");
@@ -694,7 +694,14 @@ oToolbar = function(){
 			this.dlfolder_bt.checkstate(event, x, y);
 			if(this.dlfolder_bt.state == ButtonStates.hover){
 				var WshShell = new ActiveXObject("WScript.Shell");
-				if (!fso.FolderExists(dl_prefix_folder)) fso.CreateFolder(dl_prefix_folder);
+				if (!fso.FolderExists(dl_prefix_folder)) {
+					try{
+						fso.CreateFolder(dl_prefix_folder)
+					} catch(e) {
+						fb.trace("Download: Invalid path");
+						break;
+					}
+				}
 				var filepath = dl_prefix_folder;
 				if (dl_prefix_folder.substring(0,1) == "B") filepath = filepath.replace('B:\\', fb.ProfilePath);
 				WshShell.Run("explorer.exe" + " \"" + filepath+ "\"");

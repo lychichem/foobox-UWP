@@ -2650,7 +2650,14 @@ oList = function(object_name, playlist) {
 				WshShell.Run("\"" + fb.ProfilePath + "assemblies\\Mp3tag\\Mp3tag.exe" + "\" " + "\"" + obj_file + "\"", false);
 				break;
 			case (ret == 1013):
-				if (!fso.FolderExists(dl_prefix_folder)) fso.CreateFolder(dl_prefix_folder);
+				if (!fso.FolderExists(dl_prefix_folder)) {
+					try{
+						fso.CreateFolder(dl_prefix_folder)
+					} catch(e) {
+						fb.trace("Download: Invalid path");
+						break;
+					}
+				}
 				client.SavePath = dl_prefix_folder;
 				for (i = 0; i < this.metadblist_selection.count; i++) {
 					var obj_file = fb.Titleformat("%path%").EvalWithMetadb(this.metadblist_selection.item(i));
