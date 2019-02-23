@@ -2943,7 +2943,7 @@ function button_manager() {
 				normal: s_img[0],
 				hover: s_img[1]
 			}, false, function() {
-				browser("\"" + fb.ProfilePath + "Query Syntax Help.html");
+				browser("\"" + fb.FoobarPath + "Query Syntax Help.html");
 			}, "", "打开查询语法帮助");
 			this.btns.cross1 = new btn(bx, by, bh, bh, 4, "", "", "", {
 				normal: "150",

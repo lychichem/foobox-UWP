@@ -11,6 +11,7 @@ var g_fsize = fbx_set[14];
 var album_front_disc = fbx_set[21];
 var genre_cover_dir = fbx_set[24];
 var show_shadow = fbx_set[28];
+var col_by_cover = fbx_set[30];
 var tracktype = 8;
 var Caption_Pack = {
 	"Front": "封面",
@@ -54,6 +55,20 @@ var AlbumArtId = {
 var dl_id = 0;
 //menu of online search links
 var SearchItems = [];
+var getColor = false;
+var initPlay = true;
+
+function getRed(color) {
+	return ((color >> 16) & 0xff);
+}
+
+function getGreen(color) {
+	return ((color >> 8) & 0xff);
+}
+
+function getBlue(color) {
+	return (color & 0xff);
+}
 
 function SearchItem(name, url, keyword) {
 	this.name = name;
@@ -1798,12 +1813,6 @@ function Controller(imgArray, imgDisplay, prop) {
 		window.ShowProperties();
 	}
 
-	//this.ShowHelp = function() {
-	//	var HelpFile = workPath + "\\wsh_cover_help.txt";
-	//	if (utils.FileTest(HelpFile, "e")) PopMessage(0, utils.ReadTextFile(HelpFile), 2);
-	//	else PopMessage(1, "找不到文件" + ": \'" + HelpFile + "\'", 16);
-	//}
-
 	this.OnRightClick = function(x, y) {
 		if (CoverDisplay.isXYIn(x, y) && this.funcMenu) this.funcMenu.Pop(x, y);
 	}
@@ -1833,6 +1842,7 @@ function Controller(imgArray, imgDisplay, prop) {
 	}
 
 	this.OnPlaybackStop = function(reason) {
+		initPlay = true;
 		this.cycle.Stop();
 		if (reason == 2) {
 			CollectGarbage(); // Release memory.
@@ -1849,6 +1859,7 @@ function Controller(imgArray, imgDisplay, prop) {
 	function OnNewTrack(metadb) {
 		if (metadb && currentMetadb && currentMetadb.Compare(metadb)) {
 			_this.SwitchCover(0);
+			if(col_by_cover && initPlay && getColor) getColorSchemeFromImage(currentImage);
 		}
 		else {
 			isNewgroup = false;
@@ -1884,8 +1895,27 @@ function Controller(imgArray, imgDisplay, prop) {
 		currentImage = img;
 		imgDisplay.ChangeImage(1, currentImage, isNewgroup ? 2 : 1);
 		if (imgArray.length > 1) _this.cycle.Active();
+		if(col_by_cover && getColor) getColorSchemeFromImage(currentImage);
 	}
 
+	getColorSchemeFromImage = function(image) {
+	if(!image) return;
+	var left_img = gdi.CreateImage(30, 50);
+	var gb = left_img.GetGraphics();
+	var colorScheme_array = Array();
+	gb.DrawImage(image, 0, 0, image.Width, image.Height, 7, 7, image.Width-14, image.Height-14, 0, 255);
+	left_img.ReleaseGraphics(gb);
+	var myVBArray = left_img.GetColorScheme(1);
+	colorScheme_array.splice(0, colorScheme_array.length);
+	colorScheme_array = myVBArray.toArray();
+	var gRed = getRed(colorScheme_array[0]);
+	var gGreen = getGreen(colorScheme_array[0]);
+	var gBlue = getBlue(colorScheme_array[0]);
+	var col_info = new Array(gRed, gGreen, gBlue);
+	window.NotifyOthers("get cover color", col_info);
+	getColor = false;
+	initPlay = false;
+	}
 	//------------------------------------------
 
 	function OnStop() {
@@ -2119,9 +2149,6 @@ var Properties = new function() {
 
 //===================================================
 var ww, wh;
-//var workPath = Properties.Panel.WorkDirectory;
-//var imgPath = themePath ? themePath + "\\images" : "themes\\foobox\\images";
-//
 for (var i = 0; i < SearchItems.length; i++) {
 	if (!SearchItems[i] instanceof SearchItem) {
 		SearchItems.splice(i, 1);
@@ -2191,6 +2218,7 @@ function on_playlist_switch() {
 }
 
 function on_playback_new_track(metadb) {
+	getColor = true;
 	MainController.OnPlaybackNewTrack(metadb);
 }
 
@@ -2240,20 +2268,9 @@ function on_load_image_done(cookie, image) {
 	Covers.OnLoadImageDone(cookie, image)
 }
 
-//var rbtnDown;
-
-//function on_mouse_rbtn_down(x, y, vkey) {
-//	rbtnDown = vkey == 6;
-//}
-
 function on_mouse_rbtn_up(x, y, vkey) {
-	//if (rbtnDown) {
-	//	rbtnDown = false;
-	//	return vkey != 4;
-	//} else {
-		MainController.OnRightClick(x, y, vkey);
-		return true; // Disable default right click menu.
-	//}
+	MainController.OnRightClick(x, y, vkey);
+	return true; // Disable default right click menu.
 }
 /*
 function on_font_changed() {
