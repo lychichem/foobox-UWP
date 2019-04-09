@@ -2,12 +2,13 @@
 // Playlist object by Br3tt aka Falstaff (c)2015, mod for foobox http://blog.sina.com.cn/dream7180
 // *****************************************************************************************************************************************
 
-oGroup = function(index, start, count, total_time_length, focusedTrackId, iscollapsed) {
+oGroup = function(index, start, count, total_time_length, focusedTrackId, iscollapsed, handle) {
 	this.index = index;
 	this.start = start;
 	this.count = count;
 	this.total_time_length = total_time_length;
 	this.total_group_duration_txt = TimeFmt(total_time_length);
+	this.load_requested = 0;
 
 	if (count < cGroup.count_minimum) {
 		this.rowsToAdd = cGroup.count_minimum - count;
@@ -45,6 +46,31 @@ oGroup = function(index, start, count, total_time_length, focusedTrackId, iscoll
 	this.expand = function() {
 		this.collapse = false;
 	};
+	
+	if (handle) {
+		var tf_crc;
+		switch (cGroup.pattern_idx) {
+			case 0:
+			case 1:
+				tf_crc = fb.TitleFormat("$crc32('aa'%album artist%-%album%)");
+				break;
+			case 2:
+				tf_crc = fb.TitleFormat("$crc32('artists'%album artist%)");
+				break;
+			case 3:
+				tf_crc = fb.TitleFormat("$crc32('artists'%artist%)");
+				break;
+			case 4:
+				tf_crc = fb.TitleFormat("$crc32('genres'%genre%)");
+				break;
+			case 5:
+				tf_crc = fb.TitleFormat("$crc32('directories'$directory(%path%,1))");
+				break;
+			default:
+				tf_crc = fb.TitleFormat("$crc32('aa'%album artist%-%album%)");
+		};
+		this.cachekey = process_cachekey(tf_crc.EvalWithMetadb(handle));
+	}
 };
 
 oDlItem = function(index, http_path, filename, file_title, file_artist, file_ext) {
@@ -511,7 +537,7 @@ oItem = function(playlist, row_index, type, handle, track_index, group_index, tr
 					var cv_h = Math.floor(cover.h - cMargin * 2);
 
 					var groupmetadb = p.list.handleList.Item(p.list.groups[this.group_index].start);
-					this.cover_img = g_image_cache.hit(groupmetadb);
+					this.cover_img = g_image_cache.hit(groupmetadb, this.group_index);
 					//
 					if (typeof this.cover_img != "undefined") {
 						if (this.cover_img == null) {
@@ -744,7 +770,7 @@ oItem = function(playlist, row_index, type, handle, track_index, group_index, tr
 						var cv_w = Math.floor(cover.w - cover.margin * 2);
 						var cv_h = Math.floor(cover.h - cover.margin * 2);
 						//
-						this.cover_img = g_image_cache.hit(this.metadb);
+						this.cover_img = g_image_cache.hit(this.metadb, this.group_index);
 						//
 						if (typeof this.cover_img != "undefined") {
 							if (this.cover_img == null) {
@@ -1817,6 +1843,7 @@ oList = function(object_name, playlist) {
 		this.groups.splice(0, this.groups.length);
 		for (var i = 0; i < this.count; i++) {
 			handle = this.handleList.Item(i);
+			var _handle;
 			current = properties.showgroupheaders ? tf_group_key.EvalWithMetadb(handle) : handle.Path;
 			current = current.toUpperCase();
 			if (i == 0) {
@@ -1824,35 +1851,37 @@ oList = function(object_name, playlist) {
 					count++;
 					total_time_length += handle.Length;
 					//global_time += handle.Length;
-					this.groups.push(new oGroup(this.groups.length, start, count, total_time_length, this.focusedTrackId, iscollapsed));
+					this.groups.push(new oGroup(this.groups.length, start, count, total_time_length, this.focusedTrackId, iscollapsed, handle));
 				};
 				else {
 					previous = current;
+					_handle = handle;
 				};
 			};
 			else {
 				if (current != previous || i == this.count - 1) {
 					if (current != previous) {
 						if (i == this.count - 1) {
-							this.groups.push(new oGroup(this.groups.length, start, count, total_time_length, this.focusedTrackId, iscollapsed));
+							this.groups.push(new oGroup(this.groups.length, start, count, total_time_length, this.focusedTrackId, iscollapsed, _handle));
 							start = i;
 							count = 1;
 							total_time_length = handle.Length;
-							this.groups.push(new oGroup(this.groups.length, start, count, total_time_length, this.focusedTrackId, iscollapsed));
+							this.groups.push(new oGroup(this.groups.length, start, count, total_time_length, this.focusedTrackId, iscollapsed, handle));
 						};
 						else {
-							this.groups.push(new oGroup(this.groups.length, start, count, total_time_length, this.focusedTrackId, iscollapsed));
+							this.groups.push(new oGroup(this.groups.length, start, count, total_time_length, this.focusedTrackId, iscollapsed, _handle));
 						};
 					};
 					else {
 						total_time_length += handle.Length;
 						count++;
-						this.groups.push(new oGroup(this.groups.length, start, count, total_time_length, this.focusedTrackId, iscollapsed));
+						this.groups.push(new oGroup(this.groups.length, start, count, total_time_length, this.focusedTrackId, iscollapsed, _handle));
 					};
 					count = 0;
 					total_time_length = 0;
 					start = i;
 					previous = current;
+					_handle = handle;
 				};
 			};
 			if (this.count > 1) {

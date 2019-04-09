@@ -69,7 +69,7 @@ ppt = {
 	thumbnailWidthMin: 0,
 	default_lineHeightMin: window.GetProperty("SYSTEM Minimal Line Height", 90),
 	lineHeightMin: 0,
-	enableDiskCache: window.GetProperty("SYSTEM Disk Cache", true),
+	//enableDiskCache: window.GetProperty("SYSTEM Disk Cache", true),
 	scrollRowDivider: window.GetProperty("SYSTEM Scroll Row Divider", 1),
 	tf_groupkey_genre: fb.TitleFormat("$if2(%genre%,未知流派)"),
 	tf_groupkey_dir: fb.TitleFormat("$directory_path(%path%)"),
@@ -237,16 +237,10 @@ function on_load_image_done(tid, image) {
 					};
 				};
 				else {
-					if (!timers.coverDone) {
-						timers.coverDone = window.SetTimeout(function() {
-							g_1x1 = true;
-							window.RepaintRect(0, 0, 1, 1);
-							g_1x1 = false;
-							timers.coverDone && window.ClearTimeout(timers.coverDone);
-							timers.coverDone = false;
-						}, 5);
-					};
-				};
+                        g_1x1 = true;
+                        window.RepaintRect(0, 0, 1, 1);
+                        g_1x1 = false;
+                    };
 				//};
 				break;
 			};
@@ -296,83 +290,63 @@ image_cache = function() {
 		//	return images.stream;
 		//}
 		var img = this._cachelist[brw.groups[albumIndex].cachekey];
-		if (typeof(img) == "undefined" || img == null) { // if image not in cache, we load it asynchronously
+		if (typeof(img) == "undefined" || img == null) {
 			//if(!isScrolling  && !cScrollBar.timerID) { // and when no scrolling
-			if (ppt.enableDiskCache) {
-				brw.groups[albumIndex].crc = check_cache(metadb, albumIndex);
-				if (brw.groups[albumIndex].crc && brw.groups[albumIndex].load_requested == 0) {
-					// load img from cache
-					if (!timers.coverLoad) {
-						if (!isScrolling && !cScrollBar.timerID) {
-							timers.coverLoad = window.SetTimeout(function() {
-								try {
-									brw.groups[albumIndex].tid = load_image_from_cache(metadb, brw.groups[albumIndex].crc);
-									brw.groups[albumIndex].load_requested = 1;
-								};
-								catch (e) {};
-								timers.coverLoad && window.ClearTimeout(timers.coverLoad);
-								timers.coverLoad = false;
-							}, 5);
+			var crc_exist = check_cache(albumIndex);
+			if (brw.groups[albumIndex].crc && brw.groups[albumIndex].load_requested == 0) {
+				// load img from cache
+				if (!timers.coverLoad) {
+					timers.coverLoad = window.SetTimeout(function() {
+						try {
+							brw.groups[albumIndex].tid = load_image_from_cache(brw.groups[albumIndex].cachekey);
+							brw.groups[albumIndex].load_requested = 1;
+						};
+						catch (e) {};
+						timers.coverLoad && window.ClearTimeout(timers.coverLoad);
+						timers.coverLoad = false;
+					}, (!isScrolling && !cScrollBar.timerID ? 5 : 20));
+				};
+			} else if (brw.groups[albumIndex].load_requested == 0) {
+				// load img default method
+				if (!timers.coverLoad) {
+					timers.coverLoad = window.SetTimeout(function() {
+						if (ppt.albumArtId == 5) { // genre
+							try {
+								var arr = brw.groups[albumIndex].groupkey.split(" ^^ ");
+							} catch(e) {}
+							try {
+								if(ppt.genre_dir){
+									var _path = ppt.tf_path_dir.EvalWithMetadb(metadb) + dir_cover_name;
+									var genre_img = gdi.Image(_path + ".jpg") || gdi.Image(_path + ".png");
+								}
+								else{
+									var _path = ppt.tf_path_genre/*.EvalWithMetadb(metadb)*/ +  GetGenre(arr[0]);
+									var genre_img = gdi.Image(_path + ".jpg") || gdi.Image(_path + ".png");
+								}
+							} catch (e) {};
+							try {
+								brw.groups[albumIndex].load_requested = 1;
+								brw.groups[albumIndex].cover_img = g_image_cache.getit(metadb, albumIndex, genre_img, true);
+								brw.repaint();
+							}
+							catch(e) {}
 						};
 						else {
-							timers.coverLoad = window.SetTimeout(function() {
-								try {
-									brw.groups[albumIndex].tid = load_image_from_cache(metadb, brw.groups[albumIndex].crc);
-									brw.groups[albumIndex].load_requested = 1;
-								};
-								catch (e) {};
-								timers.coverLoad && window.ClearTimeout(timers.coverLoad);
-								timers.coverLoad = false;
-							}, 20);
+							if (ppt.albumArtId == 0 && album_front_disc && brw.groups[albumIndex].tracktype < 2) {
+								if (utils.GetAlbumArtEmbedded(metadb.RawPath, 2)) this.albumArtId = 2;
+								else this.albumArtId = ppt.albumArtId;
+								CollectGarbage();
+							} else {
+								this.albumArtId = ppt.albumArtId;
+							}
+							brw.groups[albumIndex].load_requested = 1;
+							utils.GetAlbumArtAsync(window.ID, metadb, this.albumArtId, true, false, false);
 						};
-					};
+						timers.coverLoad && window.ClearTimeout(timers.coverLoad);
+						timers.coverLoad = false;
+					}, (!isScrolling && !cScrollBar.timerID ? 6 : 22));
 				};
 			};
-			if (!ppt.enableDiskCache || !(ppt.enableDiskCache && brw.groups[albumIndex].crc && brw.groups[albumIndex].load_requested == 0)) {
-				if (brw.groups[albumIndex].load_requested == 0) {
-					// load img default method
-					if (!timers.coverLoad) {
-						timers.coverLoad = window.SetTimeout(function() {
-							if (ppt.albumArtId == 5) { // genre
-								try {
-									var arr = brw.groups[albumIndex].groupkey.split(" ^^ ");
-								} catch(e) {}
-								try {
-									if(ppt.genre_dir){
-										var _path = ppt.tf_path_dir.EvalWithMetadb(metadb) + dir_cover_name;
-										var genre_img = gdi.Image(_path + ".jpg") || gdi.Image(_path + ".png");
-									}
-									else{
-										var _path = ppt.tf_path_genre/*.EvalWithMetadb(metadb)*/ +  GetGenre(arr[0]);
-										var genre_img = gdi.Image(_path + ".jpg") || gdi.Image(_path + ".png");
-									}
-								} catch (e) {
-									//if(!ppt.genre_dir)
-									//	var genre_img = gdi.Image(images.path + "genres\\" + "Other.jpg");
-								};
-								try {
-									brw.groups[albumIndex].cover_img = g_image_cache.getit(metadb, albumIndex, genre_img, true);
-									brw.repaint();
-								}
-								catch(e) {}
-							};
-							else {
-								if (ppt.albumArtId == 0 && album_front_disc && brw.groups[albumIndex].tracktype < 2) {
-									if (utils.GetAlbumArtEmbedded(metadb.RawPath, 2)) this.albumArtId = 2;
-									else this.albumArtId = ppt.albumArtId;
-									CollectGarbage();
-								} else {
-									this.albumArtId = ppt.albumArtId;
-								}
-								utils.GetAlbumArtAsync(window.ID, metadb, this.albumArtId, true, false, false);
-							};
-							timers.coverLoad && window.ClearTimeout(timers.coverLoad);
-							timers.coverLoad = false;
-						}, (!isScrolling && !cScrollBar.timerID ? 6 : 22));
-					};
-				};
-			};
-			//};
 		};
 		if (typeof(img) != "undefined" || img != null || ppt.showloading) return img;
 		else {
@@ -428,7 +402,7 @@ image_cache = function() {
 			this._cachelist[brw.groups[albumId].cachekey] = img;
 
 			// save img to cache
-			if (ppt.enableDiskCache && image_path) {
+			if (/*ppt.enableDiskCache && */image_path) {
 				if (cover_type == 1 && !brw.groups[albumId].save_requested) {
 					if (!timers.saveCover) {
 						brw.groups[albumId].save_requested = true;
@@ -889,8 +863,6 @@ oGroup = function(index, start, handle, groupkey) {
 	if (handle) {
 		switch (ppt.tagMode) {
 		case 1:
-			//if (ppt.albumMode == 0) this.cachekey = process_cachekey(ppt.tf_crc_aa.EvalWithMetadb(handle));
-			//else this.cachekey = process_cachekey(ppt.tf_crc.EvalWithMetadb(handle));
 			this.cachekey = process_cachekey(ppt.tf_crc.EvalWithMetadb(handle));
 			break;
 		case 2:
@@ -1241,8 +1213,8 @@ oBrowser = function(name) {
 		var pl_all = plman.GetPlaylistItems(-1);
 		var e = [];
 
-		var d1 = new Date();
-		var t1 = d1.getSeconds() * 1000 + d1.getMilliseconds();
+		//var d1 = new Date();
+		//var t1 = d1.getSeconds() * 1000 + d1.getMilliseconds();
 
 		this.groups.splice(0, this.groups.length);
 
@@ -1333,8 +1305,8 @@ oBrowser = function(name) {
 		pl_all.RemoveAll();
 		CollectGarbage();
 
-		var d2 = new Date();
-		var t2 = d2.getSeconds() * 1000 + d2.getMilliseconds();
+		//var d2 = new Date();
+		//var t2 = d2.getSeconds() * 1000 + d2.getMilliseconds();
 		//fb.trace("JSB POPULATE: init groups delay = " + Math.round(t2 - t1) + " /handleList count=" + total);
 	};
 
@@ -2238,20 +2210,7 @@ oBrowser = function(name) {
 				fb.CreateAutoPlaylist(pl_n, string_n, list_g + " IS " + string_n);
 				break;
 			case 1010:
-				if (fso.FileExists(fb.ProfilePath + "cache\\imgcache\\" + crc)) {
-					try {
-						fso.DeleteFile(fb.ProfilePath + "cache\\imgcache\\" + crc);
-					};
-					catch (e) {
-						fb.trace("WSH Panel 错误: 图像缓存 [" + crc + "] 无法删除, 文件正在使用中,稍后重试或重载面板.");
-					};
-				};
-				this.groups[albumIndex].tid = -1;
-				this.groups[albumIndex].load_requested = 0;
-				this.groups[albumIndex].save_requested = false;
-				g_image_cache.reset(crc);
-				this.groups[albumIndex].cover_img = null;
-				this.groups[albumIndex].cover_type = null;
+				reset_this_cache(albumIndex, crc);
 				this.repaint();
 				break;
 			case 2000:
@@ -2308,8 +2267,7 @@ oBrowser = function(name) {
 		_menu2.AppendMenuItem(MF_STRING, 911, "合计项目");
 		_menu2.CheckMenuItem(911, ppt.showAllItem);
 		_menu2.AppendMenuSeparator();
-		_menu2.AppendMenuItem(MF_STRING, 912, "启用磁盘图像缓存");
-		_menu2.CheckMenuItem(912, ppt.enableDiskCache);
+		_menu2.AppendMenuItem(MF_STRING, 912, "重置磁盘缓存");
 		_menu2.AppendTo(_menu, MF_STRING, "显示");
 		_menu.AppendMenuItem(MF_STRING, 200, "刷新封面");
 		_menu.AppendMenuSeparator();
@@ -2412,9 +2370,13 @@ oBrowser = function(name) {
 			brw.populate(false);
 			break;
 		case (idx == 912):
-			ppt.enableDiskCache = !ppt.enableDiskCache;
-			window.SetProperty("SYSTEM Disk Cache", ppt.enableDiskCache);
-			window.Reload();
+			var tot = brw.groups.length;
+			var crc;
+			for (var k = (ppt.showAllItem ? 1 : 0); k < tot; k++) {
+				crc = brw.groups[k].cachekey;
+				reset_this_cache(k, crc);
+			}
+			brw.cover_repaint();
 			break;
 			//case (idx == 990):
 			//    brw.populate(true);
@@ -2750,6 +2712,10 @@ function on_http_ex_run_status(info){
 			var idx = DLItems[info.ID].groupIndex;
 			if(idx != -1){
 				if(DLQueue.length == 0){
+					if(brw.groups[idx].load_requested == 1);{
+						var crc = brw.groups[idx].cachekey;
+						reset_this_cache(idx, crc);
+					}
 					brw.groups[idx].cover_img = g_image_cache.hit(brw.groups[idx].metadb, idx);
 					brw.cover_repaint();
 				}
@@ -4030,16 +3996,15 @@ function path_img(path) {
 	else return false;
 }
 
-function check_cache(metadb, albumIndex) {
-	//var crc = ppt.tf_crc.EvalWithMetadb(metadb);
+function check_cache(albumIndex) {
 	var crc = brw.groups[albumIndex].cachekey;
 	if (fso.FileExists(fb.ProfilePath + "cache\\imgcache\\" + crc)) {
-		return crc;
+		return true;
 	};
-	return null;
+	return false;
 };
 
-function load_image_from_cache(metadb, crc) {
+function load_image_from_cache(crc) {
 	if (fso.FileExists(fb.ProfilePath + "cache\\imgcache\\" + crc)) { // image in folder cache
 		var tdi = gdi.LoadImageAsync(window.ID, fb.ProfilePath + "cache\\imgcache\\" + crc);
 		return tdi;
@@ -4093,6 +4058,23 @@ function process_cachekey(str) {
 	};
 	return str_return;
 };
+
+function reset_this_cache(idx, crc){
+	if (fso.FileExists(fb.ProfilePath + "cache\\imgcache\\" + crc)) {
+		try {
+			fso.DeleteFile(fb.ProfilePath + "cache\\imgcache\\" + crc);
+		};
+		catch (e) {
+			fb.trace("WSH Panel 错误: 图像缓存 [" + crc + "] 无法删除, 文件正在使用中,稍后重试或重载面板.");
+		};
+	};
+	brw.groups[idx].tid = -1;
+	brw.groups[idx].load_requested = 0;
+	brw.groups[idx].save_requested = false;
+	g_image_cache.reset(crc);
+	brw.groups[idx].cover_img = null;
+	brw.groups[idx].cover_type = null;
+}
 
 function refresh_cover() {
 	g_image_cache = new image_cache;

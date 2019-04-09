@@ -804,6 +804,8 @@ oHeaderBar = function() {
 		_menu.AppendMenuItem(MF_STRING, 12, "编辑列...");
 		
 		_menu.AppendMenuSeparator();
+		_menu.AppendMenuItem(MF_STRING, 16, "刷新封面 (F5)");
+		_menu.AppendMenuSeparator();
 		_menu.AppendMenuItem(MF_STRING, 15, "查看下载目录");
 		_menu.AppendMenuItem(MF_STRING, 14, "面板属性");
 		
@@ -829,9 +831,12 @@ oHeaderBar = function() {
 				var fso = new ActiveXObject("Scripting.FileSystemObject");
 				if (!fso.FolderExists(dl_prefix_folder)) fso.CreateFolder(dl_prefix_folder);
 				var filepath = dl_prefix_folder;
-				if (dl_prefix_folder.substring(0,1) == "B") filepath = filepath.replace('B:\\', fb.ProfilePath);
+				if (dl_prefix_folder.substring(0,1) == "B") filepath = filepath.replace('B:\\', fb.FoobarPath);
 				WshShell.Run("explorer.exe" + " \"" + filepath+ "\"");
 				break;
+			break;
+		case (idx == 16):
+			refresh_cover();
 			break;
 		case (idx == 17):
 			properties.NetDisableGroup = !properties.NetDisableGroup;
