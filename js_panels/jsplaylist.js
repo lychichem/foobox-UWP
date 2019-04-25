@@ -24,7 +24,7 @@ var show_shadow = fbx_set[28];
 var sys_scrollbar = fbx_set[29];
 var col_by_cover = fbx_set[30];
 // GLOBALS
-var g_script_version = "6.1.4.3";
+var g_script_version = "6.1.4.3a";
 var g_middle_clicked = false;
 var g_middle_click_timer = false;
 var g_queue_origin = -1;
@@ -788,7 +788,7 @@ function on_artDown_notify(type, infoMetadb){
 	}
 	if(ThisIndex){
 		p.list.groups[p.list.items[ThisIndex].group_index].load_requested = 0;
-		p.list.items[ThisIndex].cover_img = g_image_cache.hit(p.list.items[ThisIndex].metadb, p.list.items[ThisIndex].group_index, true);
+		p.list.groups[p.list.items[ThisIndex].group_index].cover_img = g_image_cache.hit(p.list.items[ThisIndex].metadb, p.list.items[ThisIndex].group_index, true);
 		full_repaint();
 	}
 }
@@ -810,7 +810,7 @@ function on_get_album_art_done(metadb, art_id, image, image_path) {
 				cover_metadb = p.list.items[i].metadb;
 			};
 			if (cover_metadb.Compare(metadb)) {
-				p.list.items[i].cover_img = g_image_cache.getit(metadb, p.list.items[i].tracktype, image, albumIndex);
+				p.list.groups[albumIndex].cover_img = g_image_cache.getit(metadb, p.list.items[i].tracktype, image, albumIndex);
 				var cx = p.list.items[i].x;
 				var cy = p.list.items[i].y;
 				// fix for a weird behaviour with engine Jscript9
@@ -845,7 +845,7 @@ function on_load_image_done(tid, image){
 			var albumIndex = p.list.items[k].group_index;
 			if(p.list.groups[albumIndex].tid == tid && p.list.groups[albumIndex].load_requested == 1) {
 				p.list.groups[albumIndex].load_requested = 2;
-				p.list.items[k].cover_img = g_image_cache.getit(p.list.items[k].metadb, p.list.items[k].tracktype, image, albumIndex);
+				p.list.groups[albumIndex].cover_img = g_image_cache.getit(p.list.items[k].metadb, p.list.items[k].tracktype, image, albumIndex);
 				var cx = p.list.items[k].x;
 				var cy = p.list.items[k].y;
 				// fix for a weird behaviour with engine Jscript9
@@ -2152,7 +2152,6 @@ function on_key_down(vkey) {
 				p.scrollbar.setCursor(p.list.totalRowVisible, p.list.totalRows, p.list.offset);
 				break;
 			case VK_F5:
-				// refresh covers
 				refresh_cover();
 				break;
 			case VK_TAB:
@@ -2817,10 +2816,7 @@ function on_notify_data(name, info) {
 		break;
 	case "refresh covers PL":
 		if(info) {
-			// refresh covers
-			g_image_cache = new image_cache;
-			CollectGarbage();
-			full_repaint();
+			refresh_cover();
 		}
 		break;
 	case "jsplaylistview_show_playlist":

@@ -9,6 +9,7 @@ oGroup = function(index, start, count, total_time_length, focusedTrackId, iscoll
 	this.total_time_length = total_time_length;
 	this.total_group_duration_txt = TimeFmt(total_time_length);
 	this.load_requested = 0;
+	this.cover_img = null;
 
 	if (count < cGroup.count_minimum) {
 		this.rowsToAdd = cGroup.count_minimum - count;
@@ -525,29 +526,24 @@ oItem = function(playlist, row_index, type, handle, track_index, group_index, tr
 				};
 				if ((this.track_index_in_group == 0 || (this.row_index == 0 && cover_draw_delta > 0))) {
 					// cover bg
-					if (properties.showgroupsheader) {
-						var cMargin = cover.margin;
-					};
-					else {
-						var cMargin = 4;
-					};
+					var cMargin = 4;
 					var cv_x = Math.floor(this.x + cMargin);
 					var cv_y = Math.floor((this.y - cover_draw_delta) + cMargin);
 					var cv_w = Math.floor(cover.w - cMargin * 2);
 					var cv_h = Math.floor(cover.h - cMargin * 2);
 
 					var groupmetadb = p.list.handleList.Item(p.list.groups[this.group_index].start);
-					this.cover_img = g_image_cache.hit(groupmetadb, this.group_index);
+					p.list.groups[this.group_index].cover_img = g_image_cache.hit(groupmetadb, this.group_index);
 					//
-					if (typeof this.cover_img != "undefined") {
-						if (this.cover_img == null) {
-							this.cover_img = (cGroup.pattern_idx == 2 || cGroup.pattern_idx == 3) ? images.noartist : images.nocover;
+					if (typeof p.list.groups[this.group_index].cover_img != "undefined") {
+						if (p.list.groups[this.group_index].cover_img == null) {
+							p.list.groups[this.group_index].cover_img = (cGroup.pattern_idx == 2 || cGroup.pattern_idx == 3) ? images.noartist : images.nocover;
 						};
-						if (this.cover_img) {
+						if (p.list.groups[this.group_index].cover_img) {
 							if (cover.keepaspectratio) {
 								// *** check aspect ratio *** //
-								if (this.cover_img.Height >= this.cover_img.Width) {
-									var ratio = this.cover_img.Width / this.cover_img.Height;
+								if (p.list.groups[this.group_index].cover_img.Height >= p.list.groups[this.group_index].cover_img.Width) {
+									var ratio = p.list.groups[this.group_index].cover_img.Width / p.list.groups[this.group_index].cover_img.Height;
 									var pw = cv_w * ratio;
 									var ph = cv_h;
 									this.left = Math.floor((ph - pw) / 2);
@@ -558,7 +554,7 @@ oItem = function(playlist, row_index, type, handle, track_index, group_index, tr
 									cv_h = cv_h - this.top * 2 - 1;
 								};
 								else {
-									var ratio = this.cover_img.Height / this.cover_img.Width;
+									var ratio = p.list.groups[this.group_index].cover_img.Height / p.list.groups[this.group_index].cover_img.Width;
 									var pw = cv_w;
 									var ph = cv_h * ratio;
 									this.top = Math.floor((pw - ph) / 2);
@@ -572,10 +568,10 @@ oItem = function(playlist, row_index, type, handle, track_index, group_index, tr
 							};
 
 							if (p.headerBar.columns[0].w < cover.max_w) {
-								gr.DrawImage(this.cover_img.resize(cv_w, cv_h, 2), cv_x, cv_y, cv_w, cv_h, 0, 0, cv_w, cv_h);
+								gr.DrawImage(p.list.groups[this.group_index].cover_img.resize(cv_w, cv_h, 2), cv_x, cv_y, cv_w, cv_h, 0, 0, cv_w, cv_h);
 							};
 							else {
-								gr.DrawImage(this.cover_img, cv_x, cv_y, cv_w, cv_h, 0, 0, this.cover_img.Width, this.cover_img.Height);
+								gr.DrawImage(p.list.groups[this.group_index].cover_img, cv_x, cv_y, cv_w, cv_h, 0, 0, p.list.groups[this.group_index].cover_img.Width, p.list.groups[this.group_index].cover_img.Height);
 							};
 							gr.DrawRect(cv_x, cv_y, cv_w, cv_h, 1.0, RGB(255, 255, 255));
 						};
@@ -588,7 +584,7 @@ oItem = function(playlist, row_index, type, handle, track_index, group_index, tr
 			if (cover.w > 0) {
 				gr.DrawLine(tcolumn_x - 1, this.y + 1, tcolumn_x - 1, this.y + this.h, 1, g_color_line);
 				if(this.track_index_in_group == p.list.groups[this.group_index].rowCount -1){
-					if(cGroup.default_collapsed_height == 0)
+					if(cGroup.default_collapsed_height == 0 || !properties.showgroupheaders)
 						gr.FillSolidRect(this.x, this.y + this.h, this.w + cScrollBar.width, 1, g_color_line_div);
 					else gr.FillSolidRect(this.x, this.y + this.h, this.w + cScrollBar.width, 1, g_color_line);
 				}
@@ -770,17 +766,17 @@ oItem = function(playlist, row_index, type, handle, track_index, group_index, tr
 						var cv_w = Math.floor(cover.w - cover.margin * 2);
 						var cv_h = Math.floor(cover.h - cover.margin * 2);
 						//
-						this.cover_img = g_image_cache.hit(this.metadb, this.group_index);
+						p.list.groups[this.group_index].cover_img = g_image_cache.hit(this.metadb, this.group_index);
 						//
-						if (typeof this.cover_img != "undefined") {
-							if (this.cover_img == null) {
-								this.cover_img = (cGroup.pattern_idx == 2 || cGroup.pattern_idx == 3) ? images.noartist : images.nocover;
+						if (typeof p.list.groups[this.group_index].cover_img != "undefined") {
+							if (p.list.groups[this.group_index].cover_img == null) {
+								p.list.groups[this.group_index].cover_img = (cGroup.pattern_idx == 2 || cGroup.pattern_idx == 3) ? images.noartist : images.nocover;
 							};
-							if (this.cover_img) {
+							if (p.list.groups[this.group_index].cover_img) {
 								if (cover.keepaspectratio) {
 									// *** check aspect ratio *** //
-									if (this.cover_img.Height >= this.cover_img.Width) {
-										var ratio = this.cover_img.Width / this.cover_img.Height;
+									if (p.list.groups[this.group_index].cover_img.Height >= p.list.groups[this.group_index].cover_img.Width) {
+										var ratio = p.list.groups[this.group_index].cover_img.Width / p.list.groups[this.group_index].cover_img.Height;
 										var pw = cv_w * ratio;
 										var ph = cv_h;
 										this.left = Math.floor((ph - pw) / 2);
@@ -791,7 +787,7 @@ oItem = function(playlist, row_index, type, handle, track_index, group_index, tr
 										cv_h = cv_h - this.top * 2 - 1;
 									};
 									else {
-										var ratio = this.cover_img.Height / this.cover_img.Width;
+										var ratio = p.list.groups[this.group_index].cover_img.Height / p.list.groups[this.group_index].cover_img.Width;
 										var pw = cv_w;
 										var ph = cv_h * ratio;
 										this.top = Math.floor((pw - ph) / 2);
@@ -805,10 +801,10 @@ oItem = function(playlist, row_index, type, handle, track_index, group_index, tr
 								};
 
 								if (this.obj.collapsed) {
-									gr.DrawImage(this.cover_img.resize(cv_w, cv_h, 2), cv_x, cv_y, cv_w, cv_h, 0, 0, cv_w, cv_h);
+									gr.DrawImage(p.list.groups[this.group_index].cover_img.resize(cv_w, cv_h, 2), cv_x, cv_y, cv_w, cv_h, 0, 0, cv_w, cv_h);
 								};
 								else {
-									gr.DrawImage(this.cover_img, cv_x, cv_y, cv_w, cv_h, 0, 0, this.cover_img.Width, this.cover_img.Height);
+									gr.DrawImage(p.list.groups[this.group_index].cover_img, cv_x, cv_y, cv_w, cv_h, 0, 0, p.list.groups[this.group_index].cover_img.Width, p.list.groups[this.group_index].cover_img.Height);
 								};
 								gr.DrawRect(cv_x, cv_y, cv_w, cv_h, 1.0, RGB(255, 255, 255));
 							};
@@ -1834,7 +1830,7 @@ oList = function(object_name, playlist) {
 			};
 		};
 		else {
-			tf_group_key = fb.TitleFormat("%path%");
+			tf_group_key = fb.TitleFormat(this.groupby[cGroup.pattern_idx].tf);
 			cGroup.extra_rows = 0;
 		};
 		// if status just updated in settings, iscollapsed parameter to force
@@ -1844,7 +1840,7 @@ oList = function(object_name, playlist) {
 		for (var i = 0; i < this.count; i++) {
 			handle = this.handleList.Item(i);
 			var _handle;
-			current = properties.showgroupheaders ? tf_group_key.EvalWithMetadb(handle) : handle.Path;
+			current = tf_group_key.EvalWithMetadb(handle);
 			current = current.toUpperCase();
 			if (i == 0) {
 				if (this.count == 1) {

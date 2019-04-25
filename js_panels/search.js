@@ -838,7 +838,7 @@ function QQSearch(searchtext, pageid, switchpage){
 								filedata = filedata + '<entry>\r\n'
 								 + '<title>' + songid[i].song + '</title>\r\n'
 								 + '<author>' + songid[i].artist + '</author>\r\n'
-								 + '<ref href="' + "http://183.131.60.16/amobile.music.tc.qq.com/" + qt + songid[i].strMediaMid + ext + "?vkey=" + ret + "&guid=foobar2000&fromtag=8" + '"/>\r\n'
+								 + '<ref href="' + "http://mobileoc.music.tc.qq.com/" + qt + songid[i].strMediaMid + ext + "?vkey=" + ret + "&guid=foobar2000&fromtag=53" + '"/>\r\n'
 								 + '</entry>\r\n\r\n';
 							 }
 						}
@@ -1152,7 +1152,7 @@ function QQRanklist(idx, id, listname){
 								filedata = filedata + '<entry>\r\n'
 								 + '<title>' + songid[i].song + '</title>\r\n'
 								 + '<author>' + songid[i].artist + '</author>\r\n'
-								 + '<ref href="' + "http://183.131.60.16/amobile.music.tc.qq.com/" + qt + songid[i].strMediaMid + ext + "?vkey=" + ret + "&guid=foobar2000&fromtag=8" + '"/>\r\n'
+								 + '<ref href="' + "http://mobileoc.music.tc.qq.com/" + qt + songid[i].strMediaMid + ext + "?vkey=" + ret + "&guid=foobar2000&fromtag=53" + '"/>\r\n'
 								 + '</entry>\r\n\r\n';
 							 }
 						}
@@ -1437,7 +1437,7 @@ function QQRadiolist(id, listname){
 								filedata = filedata + '<entry>\r\n'
 								 + '<title>' + songid[i].song + '</title>\r\n'
 								 + '<author>' + songid[i].artist + '</author>\r\n'
-								 + '<ref href="' + "http://183.131.60.16/amobile.music.tc.qq.com/" + qt + songid[i].strMediaMid + ext + "?vkey=" + ret + "&guid=foobar2000&fromtag=8" + '"/>\r\n'
+								 + '<ref href="' + "http://mobileoc.music.tc.qq.com/" + qt + songid[i].strMediaMid + ext + "?vkey=" + ret + "&guid=foobar2000&fromtag=53" + '"/>\r\n'
 								 + '</entry>\r\n\r\n';
 							 }
 						}

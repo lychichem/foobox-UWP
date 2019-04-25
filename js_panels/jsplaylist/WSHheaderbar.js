@@ -972,12 +972,27 @@ oHeaderBar = function() {
 			break;
 		case (idx == 205):
 			plman.SortByFormatV2(plman.ActivePlaylist, sort_pattern_albumartist, 1);
+			if(!properties.showgroupheaders){
+				cGroup.pattern_idx = 2;
+				window.SetProperty("SYSTEM.Groups.Pattern Index", cGroup.pattern_idx);
+				window.NotifyOthers("PLMan to change sorting", p.list.groupby[cGroup.pattern_idx].sortOrder);
+			}
             break;
 		case (idx == 219):
 			plman.SortByFormatV2(plman.ActivePlaylist, sort_pattern_artist, 1);
+			if(!properties.showgroupheaders){
+				cGroup.pattern_idx = 3;
+				window.SetProperty("SYSTEM.Groups.Pattern Index", cGroup.pattern_idx);
+				window.NotifyOthers("PLMan to change sorting", p.list.groupby[cGroup.pattern_idx].sortOrder);
+			}
             break;
 		case (idx == 206):
 			plman.SortByFormatV2(plman.ActivePlaylist, sort_pattern_album, 1);
+			if(!properties.showgroupheaders){
+				cGroup.pattern_idx = 0;
+				window.SetProperty("SYSTEM.Groups.Pattern Index", cGroup.pattern_idx);
+				window.NotifyOthers("PLMan to change sorting", p.list.groupby[cGroup.pattern_idx].sortOrder);
+			}
             break;
 		case (idx == 207):
 			plman.SortByFormatV2(plman.ActivePlaylist, sort_pattern_tracknumber, 1);
@@ -987,12 +1002,22 @@ oHeaderBar = function() {
             break;
 		case (idx == 209):
 			plman.SortByFormatV2(plman.ActivePlaylist, sort_pattern_path, 1);
+			if(!properties.showgroupheaders){
+				cGroup.pattern_idx = 5;
+				window.SetProperty("SYSTEM.Groups.Pattern Index", cGroup.pattern_idx);
+				window.NotifyOthers("PLMan to change sorting", p.list.groupby[cGroup.pattern_idx].sortOrder);
+			}
             break;
 		case (idx == 210):
 			plman.SortByFormatV2(plman.ActivePlaylist, sort_pattern_date, -1);
             break;
 		case (idx == 211):
 			plman.SortByFormatV2(plman.ActivePlaylist, sort_pattern_genre, 1);
+			if(!properties.showgroupheaders){
+				cGroup.pattern_idx = 4;
+				window.SetProperty("SYSTEM.Groups.Pattern Index", cGroup.pattern_idx);
+				window.NotifyOthers("PLMan to change sorting", p.list.groupby[cGroup.pattern_idx].sortOrder);
+			}
             break;
 		case (idx == 212):
 			plman.SortByFormatV2(plman.ActivePlaylist, sort_pattern_rating, -1);

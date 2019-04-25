@@ -2370,11 +2370,21 @@ oBrowser = function(name) {
 			brw.populate(false);
 			break;
 		case (idx == 912):
+			if (fso.FolderExists(fb.ProfilePath + "cache\\imgcache")){
+				try{
+					fso.DeleteFile(fb.ProfilePath + "cache\\imgcache"+"\\*");
+				} catch(e){}
+			}
 			var tot = brw.groups.length;
 			var crc;
 			for (var k = (ppt.showAllItem ? 1 : 0); k < tot; k++) {
 				crc = brw.groups[k].cachekey;
-				reset_this_cache(k, crc);
+				brw.groups[k].tid = -1;
+				brw.groups[k].load_requested = 0;
+				brw.groups[k].save_requested = false;
+				g_image_cache.reset(crc);
+				brw.groups[k].cover_img = null;
+				brw.groups[k].cover_type = null;
 			}
 			brw.cover_repaint();
 			break;
