@@ -953,12 +953,12 @@ oBrowser = function(name) {
 
 		if (!add_mode) {
 			var pl_idx = this.rows[id].idx;
-			_newplaylist.AppendTo(_menu, (g_filterbox.inputbox.text.length > 0 ? MF_GRAYED | MF_DISABLED : MF_STRING), "插入 ...");
+			_newplaylist.AppendTo(_menu, (g_filterbox.inputbox.text.length > 0 ? MF_GRAYED | MF_DISABLED : MF_STRING), "插入...");
 		};
 		else {
 			id = this.rowsCount;
 			var pl_idx = total;
-			_newplaylist.AppendTo(_menu, (g_filterbox.inputbox.text.length > 0 ? MF_GRAYED | MF_DISABLED : MF_STRING), "添加 ...");
+			_newplaylist.AppendTo(_menu, (g_filterbox.inputbox.text.length > 0 ? MF_GRAYED | MF_DISABLED : MF_STRING), "添加...");
 		};
 		_newplaylist.AppendMenuItem(MF_STRING, 100, "新建播放列表");
 		_newplaylist.AppendMenuItem(MF_STRING, 101, "新建智能列表");

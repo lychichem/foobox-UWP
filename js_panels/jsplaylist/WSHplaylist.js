@@ -688,7 +688,7 @@ oItem = function(playlist, row_index, type, handle, track_index, group_index, tr
 				break;
 			case 2:
 				if(this.obj && l2_addinfo){
-					this.r2 = this.obj.count + " 首";//, " + this.obj.total_group_duration_txt;
+					this.r2 = this.obj.count + "首";//, " + this.obj.total_group_duration_txt;
 				}
 				var lg2_right_field_w = gr.CalcTextWidth(this.r2, g_font_group2) + cList.borderWidth * 2;
 				gr.gdiDrawText(this.l1, g_font_group1, this.l1_color, line_x, l1_y + vpadding, this.w - cover.w - g_z8 - lg1_right_field_w, cTrack.height * 1.15, lcs_txt);
@@ -703,7 +703,7 @@ oItem = function(playlist, row_index, type, handle, track_index, group_index, tr
 				gr.gdiDrawText(this.r1, g_font_group1, this.l1_color, line_x, l1_y + vpadding, this.w - cover.w - g_z7, cTrack.height * 1.15, rcs_txt);
 				gr.gdiDrawText(this.r2, g_font_group2, this.l2_color, line_x, l1_y + cTrack.height, this.w - cover.w - g_z7, cTrack.height, rcs_txt);
 				if (this.obj) {
-					var lg3_left_field = this.obj.count + " 首, " + this.obj.total_group_duration_txt;
+					var lg3_left_field = this.obj.count + "首, " + this.obj.total_group_duration_txt;
 				};
 				else {
 					var lg3_left_field = "";
@@ -720,7 +720,7 @@ oItem = function(playlist, row_index, type, handle, track_index, group_index, tr
 				gr.gdiDrawText(this.r1, g_font_group1, this.l1_color, line_x, l1_y + vpadding, this.w - cover.w - g_z7, cTrack.height * 1.15, rcs_txt);
 				gr.gdiDrawText(this.r2, g_font_group2, this.l2_color, line_x, l1_y + cTrack.height, this.w - cover.w - g_z7, cTrack.height, rcs_txt);
 				if (this.obj) {
-					var lg3_left_field = this.obj.count + " 首, " + this.obj.total_group_duration_txt;
+					var lg3_left_field = this.obj.count + "首, " + this.obj.total_group_duration_txt;
 				};
 				else {
 					var lg3_left_field = "";
@@ -2743,16 +2743,18 @@ oList = function(object_name, playlist) {
 											p.list.dlitems.splice(0,p.list.dlitems.length);
 											p.list.dl_num -= p.list.dlitems.length;
 											toolbar.dlmode = false;
+											toolbar.disabled = properties.disableToolbar;
 											toolbar.repaint_dl();
 											toolbar.checkState("move", mouse_x, mouse_y);
 										}
 										timer_exit && window.ClearTimeout(timer_exit);
 										timer_exit = false;
-									}, 2000);
+									}, 2500);
 									dl_avoid_flush = false;
 								}
 							}
 							toolbar.dlmode = true;
+							toolbar.disabled = false;
 							toolbar.repaint_dl();
 						} else {
 							window.ClearInterval(toolbar.dl_timer);

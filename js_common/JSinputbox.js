@@ -314,11 +314,11 @@ oInputbox = function (w, h, default_text, empty_text, textcolor, backcolor, bord
 		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 2, "剪切");
 		_menu.AppendMenuSeparator();
 		_menu.AppendMenuItem(cInputbox.clipboard ? MF_STRING : MF_GRAYED | MF_DISABLED, 3, "粘贴");
-		if (utils.IsKeyPressed(VK_SHIFT)) {
+		/*if (utils.IsKeyPressed(VK_SHIFT)) {
 			_menu.AppendMenuSeparator();
 			_menu.AppendMenuItem(MF_STRING, 20, "属性");
 			_menu.AppendMenuItem(MF_STRING, 21, "配置...");
-		}
+		}*/
 		idx = _menu.TrackPopupMenu(x, y);
 		switch (idx) {
 		case 1:
@@ -373,12 +373,12 @@ oInputbox = function (w, h, default_text, empty_text, textcolor, backcolor, bord
 				this.autovalidation && gfunc();
 			};
 			break;
-		case 20:
+		/*case 20:
 			window.ShowProperties();
 			break;
 		case 21:
 			window.ShowConfigure();
-			break;
+			break;*/
 		}
 		_menu.Dispose();
 	}

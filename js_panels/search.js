@@ -642,7 +642,8 @@ function KWSearch(searchtext, pageid, switchpage){
 						};
 					}
 					l = 0;
-					debug && fb.trace(songid.length);
+					//debug && fb.trace(songid.length);
+					if(songid.length == 0){UpdateDone("已经是最后一页");return;}
 					url = songid[l].url;
 					debug && fb.trace(l,url);
 					xmlHttp2.open("GET", url, true);
